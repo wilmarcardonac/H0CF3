@@ -1,15 +1,16 @@
 FC     	= gfortran
 LC     	= $(FC)
 EXE    	= h0cf3
-FITSDIR = #/home/wilmar/usr/local/lib/lib
-LIBFITS = #cfitsio
+FITSDIR = /home/wcardona/lib
+LIBFITS = cfitsio
 INCDIR	= /home/wcardona/software/Healpix/Healpix_3.31/include
 IDIR	= #/home/wilmar/additional-software/Healpix_3.00/include
-LIBDIR	= #./lapack-3.5.0	
-LDIR	= #./ranlib/lib
+INFGSL  = /home/wcardona/include/fgsl
+LIBDIR	= /home/wcardona/lib	
+LDIR	= /home/wcardona/software/Healpix/Healpix_3.31/lib
 #F_FL   	= -O3 -I$(INCDIR) -I$(IDIR) -DGFORTRAN -fno-second-underscore -fopenmp -fPIC -g
-F_FL   	= -O3 -I$(INCDIR) -Wall -fno-second-underscore -fopenmp -fPIC -g 
-LIB_FL 	= #-L$(LIBDIR) -llapack -lblas -L$(LDIR) -lranlib -lrnglib  -lhpxgif -l$(LIBFITS) -Wl,-R$(FITSDIR)
+F_FL   	= -O3 -Wall -I$(INCDIR) -I$(INFGSL) -DGFORTRAN -fno-second-underscore -fopenmp -fPIC -g 
+LIB_FL 	= -L$(LDIR) -L$(FITSDIR) -lhealpix -lhpxgif -lhpxgif -l$(LIBFITS) #-L$(LIBDIR) #-lfgsl #-llapack -lblas  -lranlib -lrnglib    -Wl,
 #####################
 OBJ   =  arrays.o fiducial.o functions.o h0cf3.o
 

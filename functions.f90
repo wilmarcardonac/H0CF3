@@ -40,10 +40,11 @@ subroutine read_data_CF3(path_to_datafile)
 
     open(11,file=path_to_datafile)
 
+    read(11,*)
+
     Do p=1,arrays_dimension
 
-!        read(11,'(a5,i8,f9.3,4f6.2)') Field(p),ID(p),PeriodR11(p),VIR11(p),F160WR11(p),eF160WR11(p),OHR11(p)
-        read(11,*) redshift(p),luminosity_distance(p),galactic_longitude(p),galactic_latitude(p)
+       read(11,*) redshift(p),luminosity_distance(p),galactic_longitude(p),galactic_latitude(p)
 
     End Do
 
