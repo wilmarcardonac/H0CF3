@@ -4,57 +4,57 @@ module functions
      
 contains
 
-subroutine read_table1_CF2(path_to_datafile)
-    use arrays
-    Implicit none
-    Integer*4 :: arrays_dimension,p
-    Integer :: stat
-    character(len=*) :: path_to_datafile
-
-    open(11,file=path_to_datafile)
-
-    Do p=1,76
-
-        read(11,*,iostat=stat)
-
-    End do
-
-    arrays_dimension = 0
-
-    Do 
-
-        read(11,*,iostat=stat)
-
-        If (stat .ne. 0) then
-
-            exit
-
-        Else
-
-            arrays_dimension = arrays_dimension + 1 
-
-        End If
-
-    End Do
-
-    close(11)
-
-    allocate (Field(1:arrays_dimension),ID(1:arrays_dimension),PeriodR11(1:arrays_dimension),&
-    VIR11(1:arrays_dimension),F160WR11(1:arrays_dimension),eF160WR11(1:arrays_dimension),&
-    OHR11(1:arrays_dimension),stat=status1)
-
-    open(11,file=path_to_datafile)
-
-    Do p=1,arrays_dimension
-
-!        read(11,'(a5,i8,f9.3,4f6.2)') Field(p),ID(p),PeriodR11(p),VIR11(p),F160WR11(p),eF160WR11(p),OHR11(p)
-        read(11,*) Field(p),ID(p),PeriodR11(p),VIR11(p),F160WR11(p),eF160WR11(p),OHR11(p)
-
-    End Do
-
-    close(11)
-
-end subroutine read_table1_CF2
+!!$subroutine read_table1_CF2(path_to_datafile)
+!!$    use arrays
+!!$    Implicit none
+!!$    Integer*4 :: arrays_dimension,p
+!!$    Integer :: stat
+!!$    character(len=*) :: path_to_datafile
+!!$
+!!$    open(11,file=path_to_datafile)
+!!$
+!!$    Do p=1,76
+!!$
+!!$        read(11,*,iostat=stat)
+!!$
+!!$    End do
+!!$
+!!$    arrays_dimension = 0
+!!$
+!!$    Do 
+!!$
+!!$        read(11,*,iostat=stat)
+!!$
+!!$        If (stat .ne. 0) then
+!!$
+!!$            exit
+!!$
+!!$        Else
+!!$
+!!$            arrays_dimension = arrays_dimension + 1 
+!!$
+!!$        End If
+!!$
+!!$    End Do
+!!$
+!!$    close(11)
+!!$
+!!$    allocate (Field(1:arrays_dimension),ID(1:arrays_dimension),PeriodR11(1:arrays_dimension),&
+!!$    VIR11(1:arrays_dimension),F160WR11(1:arrays_dimension),eF160WR11(1:arrays_dimension),&
+!!$    OHR11(1:arrays_dimension),stat=status1)
+!!$
+!!$    open(11,file=path_to_datafile)
+!!$
+!!$    Do p=1,arrays_dimension
+!!$
+!!$!        read(11,'(a5,i8,f9.3,4f6.2)') Field(p),ID(p),PeriodR11(p),VIR11(p),F160WR11(p),eF160WR11(p),OHR11(p)
+!!$        read(11,*) Field(p),ID(p),PeriodR11(p),VIR11(p),F160WR11(p),eF160WR11(p),OHR11(p)
+!!$
+!!$    End Do
+!!$
+!!$    close(11)
+!!$
+!!$end subroutine read_table1_CF2
 !!$
 !!$subroutine read_table3_R11(path_to_datafile)
 !!$
@@ -4114,49 +4114,49 @@ end subroutine read_table1_CF2
 !!$
 !!$                          Covguess(28,28) = sigma_a_cal**2
 !!$
-                          Covguess(28,28) = sigma_sigma_int**2
-
-                          Covguess(29,29) = sigma_sigma_int**2
-
-                          Covguess(30,30) = sigma_sigma_int**2
-
-                          Covguess(31,31) = sigma_sigma_int**2
-
-                          Covguess(32,32) = sigma_sigma_int**2
-
-                          Covguess(33,33) = sigma_sigma_int**2
-
-                          Covguess(34,34) = sigma_sigma_int**2
-
-                          Covguess(35,35) = sigma_sigma_int**2
-
-                          Covguess(36,36) = sigma_sigma_int**2
-
-                          Covguess(37,37) = sigma_sigma_int**2
-
-                          Covguess(38,38) = sigma_sigma_int**2
-
-                          Covguess(39,39) = sigma_sigma_int**2
-
-                          Covguess(40,40) = sigma_sigma_int**2
-
-                          Covguess(41,41) = sigma_sigma_int**2
-
-                          Covguess(42,42) = sigma_sigma_int**2
-
-                          Covguess(43,43) = sigma_sigma_int**2
-
-                          Covguess(44,44) = sigma_sigma_int**2
-
-                          Covguess(45,45) = sigma_sigma_int**2
-
-                          Covguess(46,46) = sigma_sigma_int**2
-
-                          Covguess(47,47) = sigma_sigma_int**2 ! NGC4258
-
-                          Covguess(48,48) = sigma_sigma_int**2 ! LMC
-
-                          Covguess(49,49) = sigma_sigma_int**2 ! MW
+!!$                          Covguess(28,28) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(29,29) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(30,30) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(31,31) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(32,32) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(33,33) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(34,34) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(35,35) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(36,36) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(37,37) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(38,38) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(39,39) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(40,40) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(41,41) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(42,42) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(43,43) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(44,44) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(45,45) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(46,46) = sigma_sigma_int**2
+!!$
+!!$                          Covguess(47,47) = sigma_sigma_int**2 ! NGC4258
+!!$
+!!$                          Covguess(48,48) = sigma_sigma_int**2 ! LMC
+!!$
+!!$                          Covguess(49,49) = sigma_sigma_int**2 ! MW
 !!$!                          Covguess(28,28) = sigma_sigma_int**2 ! LMC
 !!$
 !!$ !                         Covguess(29,29) = sigma_sigma_int**2 ! MW
