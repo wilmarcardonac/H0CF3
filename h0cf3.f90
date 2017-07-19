@@ -41,6 +41,7 @@ Program h0cf3
 !##########################################################
 ! ASSIGNMENTS AND INITIALIZATION OF RANDOM NUMBER GENERATOR
 !##########################################################
+    call read_data_CF3(PATH_TO_COSMICFLOWS_DATA)
 
 !!$    galaxy = host(8)
 !!$

@@ -4,57 +4,52 @@ module functions
      
 contains
 
-!!$subroutine read_table1_CF2(path_to_datafile)
-!!$    use arrays
-!!$    Implicit none
-!!$    Integer*4 :: arrays_dimension,p
-!!$    Integer :: stat
-!!$    character(len=*) :: path_to_datafile
-!!$
-!!$    open(11,file=path_to_datafile)
-!!$
-!!$    Do p=1,76
-!!$
-!!$        read(11,*,iostat=stat)
-!!$
-!!$    End do
-!!$
-!!$    arrays_dimension = 0
-!!$
-!!$    Do 
-!!$
-!!$        read(11,*,iostat=stat)
-!!$
-!!$        If (stat .ne. 0) then
-!!$
-!!$            exit
-!!$
-!!$        Else
-!!$
-!!$            arrays_dimension = arrays_dimension + 1 
-!!$
-!!$        End If
-!!$
-!!$    End Do
-!!$
-!!$    close(11)
-!!$
-!!$    allocate (Field(1:arrays_dimension),ID(1:arrays_dimension),PeriodR11(1:arrays_dimension),&
-!!$    VIR11(1:arrays_dimension),F160WR11(1:arrays_dimension),eF160WR11(1:arrays_dimension),&
-!!$    OHR11(1:arrays_dimension),stat=status1)
-!!$
-!!$    open(11,file=path_to_datafile)
-!!$
-!!$    Do p=1,arrays_dimension
-!!$
-!!$!        read(11,'(a5,i8,f9.3,4f6.2)') Field(p),ID(p),PeriodR11(p),VIR11(p),F160WR11(p),eF160WR11(p),OHR11(p)
-!!$        read(11,*) Field(p),ID(p),PeriodR11(p),VIR11(p),F160WR11(p),eF160WR11(p),OHR11(p)
-!!$
-!!$    End Do
-!!$
-!!$    close(11)
-!!$
-!!$end subroutine read_table1_CF2
+subroutine read_data_CF3(path_to_datafile)
+    use arrays
+    Implicit none
+    Integer*4 :: arrays_dimension,p
+    Integer :: stat
+    character(len=*) :: path_to_datafile
+
+    open(11,file=path_to_datafile)
+
+    read(11,*)
+
+    arrays_dimension = 0
+
+    Do 
+
+        read(11,*,iostat=stat)
+
+        If (stat .ne. 0) then
+
+            exit
+
+        Else
+
+            arrays_dimension = arrays_dimension + 1 
+
+        End If
+
+    End Do
+
+    close(11)
+
+    allocate (redshift(1:arrays_dimension),luminosity_distance(1:arrays_dimension),galactic_longitude(1:arrays_dimension),&
+    galactic_latitude(1:arrays_dimension),stat=status1)
+
+    open(11,file=path_to_datafile)
+
+    Do p=1,arrays_dimension
+
+!        read(11,'(a5,i8,f9.3,4f6.2)') Field(p),ID(p),PeriodR11(p),VIR11(p),F160WR11(p),eF160WR11(p),OHR11(p)
+        read(11,*) redshift(p),luminosity_distance(p),galactic_longitude(p),galactic_latitude(p)
+
+    End Do
+
+    close(11)
+
+end subroutine read_data_CF3
 !!$
 !!$subroutine read_table3_R11(path_to_datafile)
 !!$

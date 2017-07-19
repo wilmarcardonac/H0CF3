@@ -4,7 +4,7 @@ Module arrays
 !    Integer*4,dimension(13) :: buff
 !    Integer*4,allocatable,dimension(:) :: ID
 
-!!$    Real*8, allocatable, dimension(:) :: PeriodA,HA,Sigma_mA,VA,IIA,old_point
+  Real*8, allocatable, dimension(:) :: redshift,luminosity_distance,galactic_longitude,galactic_latitude
 !!$    Real*8, allocatable, dimension(:) :: PeriodB,HB,Sigma_mB,VB,IIB,current_point
 !!$    Real*8, allocatable, dimension(:) :: PeriodC,HC,Sigma_mC,VC,IIC,mvi5av,Sigma_mvi5av,logP,Mw,sigmaMw
 !!$    Real*8, allocatable, dimension(:) :: Period,H,Sigma_m,V,II,PeriodR11,VIR11,F160WR11,eF160WR11,OHR11
@@ -16,7 +16,7 @@ Module arrays
 !!$
 !!$    Character(len=10),allocatable,dimension(:) :: Name,NameA,NameB,NameC,Namem31
 !!$    Character(len=5),allocatable,dimension(:) :: Field,Fieldmvi
-  Character(len=7),allocatable,dimension(:) :: PGC
+!!$  Character(len=7),allocatable,dimension(:) :: PGC
 !!$    Character(len=9),allocatable,dimension(:) :: ID,IDm31
 
 End module arrays
