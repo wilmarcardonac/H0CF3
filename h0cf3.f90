@@ -62,8 +62,9 @@ Program h0cf3
 
     call write_python_script_angular_distribution_galaxies()
 
-    call write_mpi_file('example')
+    call write_mpi_file('angular_distribution_galaxies_CF3')
 
+    call system('cd scripts; sbatch angular_distribution_galaxies_CF3.mpi')
 !    call ang2pix_ring(1,0.d0,0.d0,i)
 
 
