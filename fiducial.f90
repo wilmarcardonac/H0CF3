@@ -49,7 +49,7 @@ Module fiducial
   Character(len=*),parameter :: EXECUTION_INFORMATION = './output/execution_information.txt' ! PATH TO EXECUTION INFORMATION FILE
   character(len=*),parameter :: fmt = '(I4.4)'  ! FORMAT NUMBERS 1 - 1000
   Character(len=*),parameter :: PATH_TO_COSMICFLOWS_DATA = './data/cosmic_flows_data.txt' ! COSMICFLOWS DATA REDSHIFT, DISTANCE, GALACTIC LONGITUDE AND LATITUDE
-!  Character(len=*),parameter :: PATH_TO_PLANCK_CMB_MAP = './data/COM_CMB_IQU-smica-field-Int_2048_R2.01_full.fits' ! PLANCK CMB MAP TO BE USED (NESTED ORDERING)
+  Character(len=*),parameter :: PATH_TO_FULL_COSMICFLOWS_DATA = './data/CF-3.txt' ! FULL COSMICFLOWS 3 DATA SET
 !  Character(len=*),parameter :: PATH_TO_PLANCK_CMB_MAP = './data/COM_CompMap_CMB-smica_2048_R1.20.fits' ! PLANCK CMB MAP TO BE USED (NESTED ORDERING). 2013 release including inpainted SMICA
 !  Character(len=*),parameter :: PATH_TO_VSK_MASK = './vsk_maps/vsk_mask.fits' ! VSK MASK TO BE USED (RING ORDERING)
 !  Character(len=*),parameter :: PATH_TO_VSK_SPECTRA = './vsk_angular_power_spectrum/' 

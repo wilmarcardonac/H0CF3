@@ -56,9 +56,13 @@ Program h0cf3
     write(UNIT_EXE_FILE,*) 'N_side = ', nsmax, ' IN THE CURRENT ANALYSIS; THIS CORRESPONDS TO A NUMBER '
     write(UNIT_EXE_FILE,*) 'OF PIXELS IN THE NUMBER COUNTS MAPS EQUAL TO ', npixC
 
-!##################################
-! MARKOV CHAIN MONTE CARLO ANALYSIS
-!##################################
+!################
+! ANALYSIS STARTS 
+!################
+
+    call write_python_script_angular_distribution_galaxies()
+
+    call write_mpi_file('example')
 
 !    call ang2pix_ring(1,0.d0,0.d0,i)
 
