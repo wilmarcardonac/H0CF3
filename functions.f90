@@ -262,7 +262,7 @@ subroutine write_mpi_file(name_python_file)
     write(12,'(a21)') '#SBATCH -t 2-00:00:00'
     write(12,'(a21)') '#SBATCH -o job.%J.out'
     write(12,*) 
-    write(12,'(a)') 'prun python ./scripts/'//trim(name_python_file)//'.py'
+    write(12,'(a)') 'prun python '//trim(name_python_file)//'.py'
 
     close(12)
 
