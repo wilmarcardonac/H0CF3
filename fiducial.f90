@@ -35,6 +35,8 @@ Module fiducial
   ! SPECIFICATIONS FOR THE ANALYSIS
   !################################
 
+  Integer*4 :: number_galaxies_in_CF3  ! NUMBER OF GALAXIES IN CF3 DATA SET
+
   Logical,parameter   :: do_galaxy_distribution_plots = .false. ! DO PLOTS OF ANGULAR DISTRIBUTION OF GALAXIES IF SET IT TRUE
   Logical,parameter   :: do_jackknife_analysis = .false.        ! DO JACKKNIFE ANALYSIS IF SET IT TRUE
 
@@ -54,10 +56,5 @@ Module fiducial
 !  Character(len=*),parameter :: PATH_TO_VSK_MASK = './vsk_maps/vsk_mask.fits' ! VSK MASK TO BE USED (RING ORDERING)
 !  Character(len=*),parameter :: PATH_TO_VSK_SPECTRA = './vsk_angular_power_spectrum/' 
 !  Character(len=*),parameter :: PATH_TO_CMB_FREQUENCY_MAPS = './cmb_maps/frequency-maps/' ! PATH TO CMB FREQUENCY MAPS (DATA AND FFP8.1 SIMULATIONS)
-
-  !################
-  ! MCMC PARAMETERS
-  !################
-
 
 End Module fiducial

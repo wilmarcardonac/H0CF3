@@ -56,15 +56,34 @@ Program h0cf3
     write(UNIT_EXE_FILE,*) 'N_side = ', nsmax, ' IN THE CURRENT ANALYSIS; THIS CORRESPONDS TO A NUMBER '
     write(UNIT_EXE_FILE,*) 'OF PIXELS IN THE NUMBER COUNTS MAPS EQUAL TO ', npixC
 
+    write(UNIT_EXE_FILE,*) ' '
+
 !################
 ! ANALYSIS STARTS 
 !################
 
-    call write_python_script_angular_distribution_galaxies()
+    If (do_galaxy_distribution_plots) then
 
-    call write_mpi_file('angular_distribution_galaxies_CF3')
+       write(UNIT_EXE_FILE,*) 'FIGURES ANGULAR GALAXY DISTRIBUTION BEING CREATED'
 
-    call system('cd scripts; sbatch angular_distribution_galaxies_CF3.mpi')
+       call write_python_script_angular_distribution_galaxies()
+
+       call write_mpi_file('angular_distribution_galaxies_CF3')
+
+       call system('cd scripts; sbatch angular_distribution_galaxies_CF3.mpi')
+
+       write(UNIT_EXE_FILE,*) ' '
+
+    Else
+
+       write(UNIT_EXE_FILE,*) 'NOT DOING ANGULAR GALAXY DISTRIBUTION FIGURES'
+
+       write(UNIT_EXE_FILE,*) ' '
+
+    End If
+
+    call compute_number_counts_map(1.d-2,5.d-2)
+
 !    call ang2pix_ring(1,0.d0,0.d0,i)
 
 

@@ -35,6 +35,8 @@ subroutine read_data_CF3(path_to_datafile)
 
     close(11)
 
+    number_galaxies_in_CF3 = arrays_dimension
+
     allocate (redshift(1:arrays_dimension),luminosity_distance(1:arrays_dimension),galactic_longitude(1:arrays_dimension),&
     galactic_latitude(1:arrays_dimension),stat=status1)
 
@@ -250,23 +252,70 @@ subroutine write_python_script_angular_distribution_galaxies()
 end subroutine write_python_script_angular_distribution_galaxies
 
 subroutine write_mpi_file(name_python_file)
-    Implicit none
-    character(len=*) :: name_python_file
+    
+  Implicit none
 
-    open(12,file='./scripts/'//trim(name_python_file)//'.mpi')
+  character(len=*) :: name_python_file
+  
+  open(12,file='./scripts/'//trim(name_python_file)//'.mpi')
 
-    write(12,'(a11)') '#!/bin/bash'
-    write(12,'(a12)') '#SBATCH -N 1'
-    write(12,'(a23)') '#SBATCH -J ANG-DIST-CF3'
-    write(12,'(a12)') '#SBATCH -n 1'
-    write(12,'(a21)') '#SBATCH -t 2-00:00:00'
-    write(12,'(a21)') '#SBATCH -o job.%J.out'
-    write(12,*) 
-    write(12,'(a)') 'prun python '//trim(name_python_file)//'.py'
+  write(12,'(a11)') '#!/bin/bash'
+  write(12,'(a12)') '#SBATCH -N 1'
+  write(12,'(a23)') '#SBATCH -J ANG-DIST-CF3'
+  write(12,'(a12)') '#SBATCH -n 1'
+  write(12,'(a21)') '#SBATCH -t 2-00:00:00'
+  write(12,'(a21)') '#SBATCH -o job.%J.out'
+  write(12,*) 
+  write(12,'(a)') 'prun python '//trim(name_python_file)//'.py'
 
-    close(12)
+  close(12)
 
 end subroutine write_mpi_file
 
+subroutine compute_number_counts_map(zmin,zmax)
+
+  use healpix_types
+  use udgrade_nr, only: udgrade_ring, udgrade_nest
+  use pix_tools, only: nside2npix,convert_ring2nest, convert_nest2ring,remove_dipole, ang2pix_ring
+  use fitstools, only: getsize_fits, input_map, output_map
+  use head_fits
+  use fiducial
+  use arrays
+
+  Implicit none
+
+  Character(len=80),dimension(1:60) :: header
+
+  Real*8 :: zmin,zmax
+
+  Integer*4 :: data_index
+
+  allocate (map(0:npixC-1,1:1), map_nc(0:npixC-1,1:1), shot_noise(0:npixC-1,1:1),& 
+         mask(0:npixC-1,1:1), stat = status1)
+
+  call write_minimal_header(header, 'MAP', nside = nsmax, ordering = ORDERING_NC_MAPS, coordsys = SYS_COORD) ! HEADER OF NUMBER COUNTS MAPS
+
+  map(0:npixC-1,1) = HPX_DBADVAL ! INITIALIZATION OF NUMBER COUNTS MAP
+  map_nc(0:npixC-1,1) = HPX_DBADVAL ! INITIALIZATION OF NORMALISED NUMBER COUNTS MAP
+  shot_noise(0:npixC-1,1) = HPX_DBADVAL ! INITIALIZATION OF SHOT NOISE MASK
+  mask(0:npixC-1,1) = HPX_DBADVAL ! INITIALIZATION OF NUMBER COUNTS MASK
+
+  Do data_index=1,number_galaxies_in_CF3
+
+     If ( (redshift(data_index) .gt. zmin) .and. (redshift(data_index) .le. zmax) ) then
+
+        print *, 'I love you'
+
+     Else
+
+        print *. 'I hate you'
+
+     End If
+
+  End Do
+
+  deallocate (map, map_nc, shot_noise, mask, stat = status1)
+
+end subroutine compute_number_counts_map
 
 end module functions
