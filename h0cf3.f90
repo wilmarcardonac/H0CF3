@@ -7,7 +7,7 @@ Program h0cf3
   use healpix_types
   use healpix_modules
   use udgrade_nr, only: udgrade_ring, udgrade_nest
-  use pix_tools, only: nside2npix,convert_ring2nest, convert_nest2ring, remove_dipole, ang2pix_ring
+  use pix_tools, only: nside2npix,convert_ring2nest, convert_nest2ring, remove_dipole, ang2pix_ring, vec2ang
   use fitstools, only: getsize_fits, input_map, output_map, fits2cl
   use head_fits
 !  use fgsl
@@ -25,6 +25,7 @@ Program h0cf3
 
     Real(kind=DP),dimension(0:DEGREE_REMOVE_DIPOLE*DEGREE_REMOVE_DIPOLE-1) :: multipoles ! SAVES MONOPOLE AND DIPOLE OF CMB MAP 
     Real(kind=DP),dimension(1:2) :: zbounds ! BOUNDS TO COMPUTE DIPOLE AND MONOPOLE
+    Real(kind=DP) :: theta,phi ! COLATITUDE AND LONGITUDE
 
     Logical :: exist
 
@@ -82,10 +83,15 @@ Program h0cf3
 
     End If
 
-    call compute_number_counts_map(1.d-2,5.d-2)
+    call compute_number_counts_map(1.d-2,5.d-2,.false.)
 
-!    call ang2pix_ring(1,0.d0,0.d0,i)
+    call remove_dipole(nsmax,map_nc(0:npixC-1,1),RING_ORDERING,DEGREE_REMOVE_DIPOLE,multipoles,zbounds,HPX_DBADVAL)
 
+    print *, multipoles(1:3)
+
+    call vec2ang(multipoles(1:3),theta,phi)
+
+    print *, theta, phi
 
     close(UNIT_EXE_FILE)
 

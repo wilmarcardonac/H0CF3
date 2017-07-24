@@ -5,52 +5,56 @@ module functions
 contains
 
 subroutine read_data_CF3(path_to_datafile)
-    use arrays
-    Implicit none
-    Integer*4 :: arrays_dimension,p
-    Integer :: stat
-    character(len=*) :: path_to_datafile
 
-    open(11,file=path_to_datafile)
+  use arrays
+  use fiducial
 
-    read(11,*)
+  Implicit none
 
-    arrays_dimension = 0
+  Integer*4 :: arrays_dimension,p
+  Integer :: stat
+  character(len=*) :: path_to_datafile
 
-    Do 
+  open(11,file=path_to_datafile)
 
-        read(11,*,iostat=stat)
+  read(11,*)
 
-        If (stat .ne. 0) then
+  arrays_dimension = 0
 
-            exit
+  Do 
 
-        Else
+     read(11,*,iostat=stat)
 
-            arrays_dimension = arrays_dimension + 1 
+     If (stat .ne. 0) then
 
-        End If
+        exit
 
-    End Do
+     Else
 
-    close(11)
+        arrays_dimension = arrays_dimension + 1 
 
-    number_galaxies_in_CF3 = arrays_dimension
+     End If
 
-    allocate (redshift(1:arrays_dimension),luminosity_distance(1:arrays_dimension),galactic_longitude(1:arrays_dimension),&
-    galactic_latitude(1:arrays_dimension),stat=status1)
+  End Do
 
-    open(11,file=path_to_datafile)
+  close(11)
 
-    read(11,*)
+  number_galaxies_in_CF3 = arrays_dimension
 
-    Do p=1,arrays_dimension
+  allocate (redshift(1:arrays_dimension),luminosity_distance(1:arrays_dimension),galactic_longitude(1:arrays_dimension),&
+       galactic_latitude(1:arrays_dimension),stat=status1)
 
-       read(11,*) redshift(p),luminosity_distance(p),galactic_longitude(p),galactic_latitude(p)
+  open(11,file=path_to_datafile)
 
-    End Do
+  read(11,*)
 
-    close(11)
+  Do p=1,arrays_dimension
+
+     read(11,*) redshift(p),luminosity_distance(p),galactic_longitude(p),galactic_latitude(p)
+
+  End Do
+
+  close(11)
 
 end subroutine read_data_CF3
 
@@ -272,7 +276,7 @@ subroutine write_mpi_file(name_python_file)
 
 end subroutine write_mpi_file
 
-subroutine compute_number_counts_map(zmin,zmax)
+subroutine compute_number_counts_map(zmin,zmax,jackknife)
 
   use healpix_types
   use udgrade_nr, only: udgrade_ring, udgrade_nest
@@ -285,17 +289,26 @@ subroutine compute_number_counts_map(zmin,zmax)
   Implicit none
 
   Character(len=80),dimension(1:60) :: header
+  Character(len=4) :: Ns
+  Character(len=5) :: xmin,xmax
 
-  Real*8 :: zmin,zmax
+  Real*8 :: zmin,zmax,mean_nc
 
-  Integer*4 :: data_index
+  Integer*8 :: data_index, index_i
+  Integer(kind=I8B) :: ipring ! NUMBERS PIXELS IN NUMBER COUNTS MAP
+
+  Logical :: jackknife
+
+  write(xmin,'(F5.2)') zmin
+  write(xmax,'(F5.2)') zmax
+  write(Ns,'(I4.4)') nsmax
 
   allocate (map(0:npixC-1,1:1), map_nc(0:npixC-1,1:1), shot_noise(0:npixC-1,1:1),& 
          mask(0:npixC-1,1:1), stat = status1)
 
   call write_minimal_header(header, 'MAP', nside = nsmax, ordering = ORDERING_NC_MAPS, coordsys = SYS_COORD) ! HEADER OF NUMBER COUNTS MAPS
 
-  map(0:npixC-1,1) = HPX_DBADVAL ! INITIALIZATION OF NUMBER COUNTS MAP
+  map(0:npixC-1,1) = 0.d0 ! INITIALIZATION OF NUMBER COUNTS MAP
   map_nc(0:npixC-1,1) = HPX_DBADVAL ! INITIALIZATION OF NORMALISED NUMBER COUNTS MAP
   shot_noise(0:npixC-1,1) = HPX_DBADVAL ! INITIALIZATION OF SHOT NOISE MASK
   mask(0:npixC-1,1) = HPX_DBADVAL ! INITIALIZATION OF NUMBER COUNTS MASK
@@ -304,17 +317,59 @@ subroutine compute_number_counts_map(zmin,zmax)
 
      If ( (redshift(data_index) .gt. zmin) .and. (redshift(data_index) .le. zmax) ) then
 
-        print *, 'I love you'
+        If ( galactic_latitude(data_index) .lt. 0.d0 ) then
+
+           call ang2pix_ring(nsmax,abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,galactic_longitude(data_index)*DEG2RAD,ipring)
+
+           map(ipring,1) = map(ipring,1) + 1
+
+        Else
+
+           call ang2pix_ring(nsmax,-abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,galactic_longitude(data_index)*DEG2RAD,ipring)
+
+           map(ipring,1) = map(ipring,1) + 1
+
+        End If
 
      Else
 
-        print *. 'I hate you'
+        continue
 
      End If
 
   End Do
 
-  deallocate (map, map_nc, shot_noise, mask, stat = status1)
+  mean_nc = sum(map)/npixC
+
+  Do index_i=0,npixC-1
+
+     If ( map(index_i,1) .ne. 0.d0 ) then
+
+        mask(index_i,1) = 1.d0
+
+        shot_noise(index_i,1) = 1.d0/map(index_i,1)
+
+        map_nc(index_i,1) = ( map(index_i,1) - mean_nc )/mean_nc
+
+     End If
+
+  End Do
+
+  If (.not. jackknife) then
+
+     call output_map(map,header,'./output/map_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//'_Nside_'//trim(Ns)//'.fits')
+
+     call output_map(mask,header,'./output/mask_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//'_Nside_'//trim(Ns)//'.fits')
+
+     call output_map(shot_noise,header,'./output/shot_noise_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//&
+          '_Nside_'//trim(Ns)//'.fits')
+
+     call output_map(map_nc,header,'./output/number_counts_map_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//&
+          '_Nside_'//trim(Ns)//'.fits')
+
+  End If
+
+  deallocate (map, shot_noise, mask, stat = status1)
 
 end subroutine compute_number_counts_map
 
