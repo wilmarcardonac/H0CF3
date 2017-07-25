@@ -36,7 +36,7 @@ Module fiducial
   ! SPECIFICATIONS FOR THE ANALYSIS
   !################################
 
-  Integer*4 :: number_galaxies_in_CF3  ! NUMBER OF GALAXIES IN CF3 DATA SET
+  Integer*8 :: number_galaxies_in_CF3  ! NUMBER OF GALAXIES IN CF3 DATA SET
 
   Logical,parameter   :: do_galaxy_distribution_plots = .false. ! DO PLOTS OF ANGULAR DISTRIBUTION OF GALAXIES IF SET IT TRUE
   Logical,parameter   :: do_jackknife_analysis = .false.        ! DO JACKKNIFE ANALYSIS IF SET IT TRUE

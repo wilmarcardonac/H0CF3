@@ -303,6 +303,8 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
   Logical :: jackknife
   Logical :: exist
 
+  zbounds(:) = 0.d0
+
   If (.not.jackknife) then
 
      If (data_index_excluded .lt. 0) then
@@ -348,13 +350,15 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
 
               If ( galactic_latitude(data_index) .lt. 0.d0 ) then
 
-                 call ang2pix_ring(nsmax,abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,galactic_longitude(data_index)*DEG2RAD,ipring)
+                 call ang2pix_ring(nsmax,abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,&
+                      galactic_longitude(data_index)*DEG2RAD,ipring)
 
                  map(ipring,1) = map(ipring,1) + 1
 
               Else
 
-                 call ang2pix_ring(nsmax,-abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,galactic_longitude(data_index)*DEG2RAD,ipring)
+                 call ang2pix_ring(nsmax,-abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,&
+                      galactic_longitude(data_index)*DEG2RAD,ipring)
 
                  map(ipring,1) = map(ipring,1) + 1
 
@@ -366,13 +370,15 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
 
            If ( galactic_latitude(data_index) .lt. 0.d0 ) then
 
-              call ang2pix_ring(nsmax,abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,galactic_longitude(data_index)*DEG2RAD,ipring)
+              call ang2pix_ring(nsmax,abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,&
+                   galactic_longitude(data_index)*DEG2RAD,ipring)
 
               map(ipring,1) = map(ipring,1) + 1
 
            Else
 
-              call ang2pix_ring(nsmax,-abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,galactic_longitude(data_index)*DEG2RAD,ipring)
+              call ang2pix_ring(nsmax,-abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,&
+                   galactic_longitude(data_index)*DEG2RAD,ipring)
 
               map(ipring,1) = map(ipring,1) + 1
 
@@ -500,20 +506,12 @@ subroutine jackknife_analysis(zmin,zmax)
 
   Implicit none
 
-!  Character(len=80),dimension(1:60) :: header
   Character(len=4) :: Ns
   Character(len=5) :: xmin,xmax
 
-  Real*8 :: zmin,zmax,dip_amplitude,dip_latitude,dip_longitude
-!  Real(kind=DP),dimension(0:DEGREE_REMOVE_DIPOLE*DEGREE_REMOVE_DIPOLE-1) :: multipoles ! SAVES MONOPOLE AND DIPOLE OF CMB MAP 
-!  Real(kind=DP),dimension(1:2) :: zbounds ! BOUNDS TO COMPUTE DIPOLE AND MONOPOLE
-!  Real(kind=DP) :: theta,phi ! COLATITUDE AND LONGITUDE
+  Real*8 :: zmin,zmax
 
   Integer*8 :: counter_data_points, data_index, index_jackknife_analysis, dimension_jackknife_analysis
-!  Integer(kind=I8B) :: ipring ! NUMBERS PIXELS IN NUMBER COUNTS MAP
-
-!  Logical :: jackknife
-!  Logical :: exist
 
   write(xmin,'(F5.2)') zmin
   write(xmax,'(F5.2)') zmax
@@ -580,7 +578,8 @@ subroutine jackknife_analysis(zmin,zmax)
 
   close(UNIT_JACKKNIFE_FILE)
 
-  deallocate(jackknife_data_indices,jackknife_dipole_amplitude,jackknife_galactic_longitude,jackknife_galactic_latitude,stat=status1)
+  deallocate(jackknife_data_indices,jackknife_dipole_amplitude,jackknife_galactic_longitude,&
+       jackknife_galactic_latitude,stat=status1)
 
 end subroutine jackknife_analysis
 

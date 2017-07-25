@@ -21,24 +21,17 @@ Program h0cf3
 
     Implicit none
 
-    Integer*4 :: m,n,i                      ! INTERGER FOR SHORT LOOPS 
-
+    Integer*8 :: i
 
     Real*8 :: testdipamp,test1,test2
-
-    Logical :: exist
-
-    Character(len=4) :: x
-
-    Character(len=80),dimension(1:60) :: header
 
 !######################################
 ! INITIALIZATION OF VARIABLES AND FILES
 !######################################
 
-    open(UNIT_EXE_FILE,file=EXECUTION_INFORMATION)
+    i = -1
 
-    zbounds(:) = 0.d0 
+    open(UNIT_EXE_FILE,file=EXECUTION_INFORMATION)
 
     npixC = nside2npix(nsmax)
 
@@ -82,7 +75,7 @@ Program h0cf3
 
     End If
 
-    call compute_number_counts_map(1.d-2,5.d-2,.false.,-1,testdipamp,test1,test2)
+    call compute_number_counts_map(1.d-2,5.d-2,.false.,i,testdipamp,test1,test2)
 
     print *, testdipamp, test1, test2
 
