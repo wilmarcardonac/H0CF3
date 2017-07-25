@@ -23,9 +23,8 @@ Program h0cf3
 
     Integer*4 :: m,n,i                      ! INTERGER FOR SHORT LOOPS 
 
-    Real(kind=DP),dimension(0:DEGREE_REMOVE_DIPOLE*DEGREE_REMOVE_DIPOLE-1) :: multipoles ! SAVES MONOPOLE AND DIPOLE OF CMB MAP 
-    Real(kind=DP),dimension(1:2) :: zbounds ! BOUNDS TO COMPUTE DIPOLE AND MONOPOLE
-    Real(kind=DP) :: theta,phi ! COLATITUDE AND LONGITUDE
+
+    Real*8 :: testdipamp,test1,test2
 
     Logical :: exist
 
@@ -83,15 +82,9 @@ Program h0cf3
 
     End If
 
-    call compute_number_counts_map(1.d-2,5.d-2,.false.)
+    call compute_number_counts_map(1.d-2,5.d-2,.false.,-1,testdipamp,test1,test2)
 
-    call remove_dipole(nsmax,map_nc(0:npixC-1,1),RING_ORDERING,DEGREE_REMOVE_DIPOLE,multipoles,zbounds,HPX_DBADVAL)
-
-    print *, multipoles(1:3)
-
-    call vec2ang(multipoles(1:3),theta,phi)
-
-    print *, theta, phi
+    print *, testdipamp, test1, test2
 
     close(UNIT_EXE_FILE)
 

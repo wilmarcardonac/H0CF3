@@ -276,11 +276,11 @@ subroutine write_mpi_file(name_python_file)
 
 end subroutine write_mpi_file
 
-subroutine compute_number_counts_map(zmin,zmax,jackknife)
+subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip_amplitude,dip_latitude,dip_longitude)
 
   use healpix_types
   use udgrade_nr, only: udgrade_ring, udgrade_nest
-  use pix_tools, only: nside2npix,convert_ring2nest, convert_nest2ring,remove_dipole, ang2pix_ring
+  use pix_tools, only: nside2npix,convert_ring2nest, convert_nest2ring,remove_dipole, ang2pix_ring, vec2ang
   use fitstools, only: getsize_fits, input_map, output_map
   use head_fits
   use fiducial
@@ -292,12 +292,33 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife)
   Character(len=4) :: Ns
   Character(len=5) :: xmin,xmax
 
-  Real*8 :: zmin,zmax,mean_nc
+  Real*8 :: zmin,zmax,mean_nc,dip_amplitude,dip_latitude,dip_longitude
+  Real(kind=DP),dimension(0:DEGREE_REMOVE_DIPOLE*DEGREE_REMOVE_DIPOLE-1) :: multipoles ! SAVES MONOPOLE AND DIPOLE OF CMB MAP 
+  Real(kind=DP),dimension(1:2) :: zbounds ! BOUNDS TO COMPUTE DIPOLE AND MONOPOLE
+  Real(kind=DP) :: theta,phi ! COLATITUDE AND LONGITUDE
 
-  Integer*8 :: data_index, index_i
+  Integer*8 :: data_index, index_i,data_index_excluded
   Integer(kind=I8B) :: ipring ! NUMBERS PIXELS IN NUMBER COUNTS MAP
 
   Logical :: jackknife
+  Logical :: exist
+
+  If (.not.jackknife) then
+
+     If (data_index_excluded .lt. 0) then
+
+        continue 
+
+     Else
+
+        write(UNIT_EXE_FILE,*) 'WHEN NOT DOING JACKKNIFE ANALYSIS SET "data_index_excluded" TO A NEGATIVE INTEGER'&
+             &'SUBROUTINE "compute_number_counts_map" '
+
+        stop
+
+     End If
+
+  End If
 
   write(xmin,'(F5.2)') zmin
   write(xmax,'(F5.2)') zmax
@@ -317,17 +338,45 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife)
 
      If ( (redshift(data_index) .gt. zmin) .and. (redshift(data_index) .le. zmax) ) then
 
-        If ( galactic_latitude(data_index) .lt. 0.d0 ) then
+        If (jackknife) then
 
-           call ang2pix_ring(nsmax,abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,galactic_longitude(data_index)*DEG2RAD,ipring)
+           If (data_index .eq. data_index_excluded) then
 
-           map(ipring,1) = map(ipring,1) + 1
+              continue 
+
+           Else
+
+              If ( galactic_latitude(data_index) .lt. 0.d0 ) then
+
+                 call ang2pix_ring(nsmax,abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,galactic_longitude(data_index)*DEG2RAD,ipring)
+
+                 map(ipring,1) = map(ipring,1) + 1
+
+              Else
+
+                 call ang2pix_ring(nsmax,-abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,galactic_longitude(data_index)*DEG2RAD,ipring)
+
+                 map(ipring,1) = map(ipring,1) + 1
+
+              End If
+
+           End If
 
         Else
 
-           call ang2pix_ring(nsmax,-abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,galactic_longitude(data_index)*DEG2RAD,ipring)
+           If ( galactic_latitude(data_index) .lt. 0.d0 ) then
 
-           map(ipring,1) = map(ipring,1) + 1
+              call ang2pix_ring(nsmax,abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,galactic_longitude(data_index)*DEG2RAD,ipring)
+
+              map(ipring,1) = map(ipring,1) + 1
+
+           Else
+
+              call ang2pix_ring(nsmax,-abs(galactic_latitude(data_index))*DEG2RAD+HALFPI,galactic_longitude(data_index)*DEG2RAD,ipring)
+
+              map(ipring,1) = map(ipring,1) + 1
+
+           End If
 
         End If
 
@@ -355,22 +404,184 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife)
 
   End Do
 
-  If (.not. jackknife) then
+  If (jackknife) then
+
+     continue
+
+  Else
+
+     inquire(file = './output/map_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//'_Nside_'//trim(Ns)//'.fits',exist=exist)
+
+     If (exist) then
+
+        call system("rm ./output/map_zmin_"//trim(xmin)//"_zmax_"//trim(xmax)//"_Nside_"//trim(Ns)//".fits")
+
+     Else
+
+        continue
+
+     End If
 
      call output_map(map,header,'./output/map_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//'_Nside_'//trim(Ns)//'.fits')
 
+     inquire(file = './output/mask_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//'_Nside_'//trim(Ns)//'.fits',exist=exist)
+
+     If (exist) then
+
+        call system("rm ./output/mask_zmin_"//trim(xmin)//"_zmax_"//trim(xmax)//"_Nside_"//trim(Ns)//".fits")
+
+     Else
+
+        continue
+
+     End If
+
      call output_map(mask,header,'./output/mask_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//'_Nside_'//trim(Ns)//'.fits')
+
+     inquire(file = './output/shot_noise_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//&
+          '_Nside_'//trim(Ns)//'.fits',exist=exist)
+
+     If (exist) then
+
+        call system("rm ./output/shot_noise_zmin_"//trim(xmin)//"_zmax_"//trim(xmax)//&
+          "_Nside_"//trim(Ns)//".fits")
+
+     Else
+
+        continue
+
+     End If
 
      call output_map(shot_noise,header,'./output/shot_noise_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//&
           '_Nside_'//trim(Ns)//'.fits')
+
+     inquire(file = './output/number_counts_map_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//&
+          '_Nside_'//trim(Ns)//'.fits',exist=exist)
+
+     If (exist) then
+
+        call system("rm ./output/number_counts_map_zmin_"//trim(xmin)//"_zmax_"//trim(xmax)//&
+          "_Nside_"//trim(Ns)//".fits")
+
+     Else
+
+        continue
+
+     End If
 
      call output_map(map_nc,header,'./output/number_counts_map_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//&
           '_Nside_'//trim(Ns)//'.fits')
 
   End If
 
-  deallocate (map, shot_noise, mask, stat = status1)
+  call remove_dipole(nsmax,map_nc(0:npixC-1,1),RING_ORDERING,DEGREE_REMOVE_DIPOLE,multipoles,zbounds,HPX_DBADVAL)
+
+  dip_amplitude = sqrt(multipoles(1)**2 + multipoles(2)**2 + multipoles(3)**3)
+
+  call vec2ang(multipoles(1:3),theta,phi)
+
+  dip_longitude = phi
+
+  dip_latitude = HALFPI - theta
+
+  deallocate (map, shot_noise, mask, map_nc, stat = status1)
 
 end subroutine compute_number_counts_map
+
+subroutine jackknife_analysis(zmin,zmax)
+
+!  use healpix_types
+!  use udgrade_nr, only: udgrade_ring, udgrade_nest
+!  use pix_tools, only: nside2npix,convert_ring2nest, convert_nest2ring,remove_dipole, ang2pix_ring, vec2ang
+!  use fitstools, only: getsize_fits, input_map, output_map
+!  use head_fits
+  use fiducial
+  use arrays
+
+  Implicit none
+
+!  Character(len=80),dimension(1:60) :: header
+  Character(len=4) :: Ns
+  Character(len=5) :: xmin,xmax
+
+  Real*8 :: zmin,zmax,dip_amplitude,dip_latitude,dip_longitude
+!  Real(kind=DP),dimension(0:DEGREE_REMOVE_DIPOLE*DEGREE_REMOVE_DIPOLE-1) :: multipoles ! SAVES MONOPOLE AND DIPOLE OF CMB MAP 
+!  Real(kind=DP),dimension(1:2) :: zbounds ! BOUNDS TO COMPUTE DIPOLE AND MONOPOLE
+!  Real(kind=DP) :: theta,phi ! COLATITUDE AND LONGITUDE
+
+  Integer*8 :: counter_data_points, data_index, index_jackknife_analysis, dimension_jackknife_analysis
+!  Integer(kind=I8B) :: ipring ! NUMBERS PIXELS IN NUMBER COUNTS MAP
+
+!  Logical :: jackknife
+!  Logical :: exist
+
+  write(xmin,'(F5.2)') zmin
+  write(xmax,'(F5.2)') zmax
+  write(Ns,'(I4.4)') nsmax
+
+  counter_data_points = 0
+
+  Do data_index=1,number_galaxies_in_CF3
+
+     If ( (redshift(data_index) .gt. zmin) .and. (redshift(data_index) .le. zmax) ) then
+
+        counter_data_points = counter_data_points + 1
+
+     Else
+
+        continue
+
+     End If
+
+  End Do
+
+  allocate (jackknife_data_indices(1:counter_data_points),jackknife_dipole_amplitude(1:counter_data_points),&
+       jackknife_galactic_longitude(1:counter_data_points),jackknife_galactic_latitude(1:counter_data_points),stat=status1)
+
+  dimension_jackknife_analysis = counter_data_points
+
+  counter_data_points = 1
+
+  Do data_index=1,number_galaxies_in_CF3
+
+     If ( (redshift(data_index) .gt. zmin) .and. (redshift(data_index) .le. zmax) ) then
+
+        jackknife_data_indices(counter_data_points) = data_index
+
+        counter_data_points = counter_data_points + 1
+
+     Else
+
+        continue
+
+     End If
+
+  End Do
+
+  Do index_jackknife_analysis=1,dimension_jackknife_analysis
+
+     call compute_number_counts_map(zmin,zmax,.true.,jackknife_data_indices(index_jackknife_analysis),&
+          jackknife_dipole_amplitude(index_jackknife_analysis),jackknife_galactic_latitude(index_jackknife_analysis),&
+          jackknife_galactic_longitude(index_jackknife_analysis))
+
+  End Do
+
+  open(UNIT_JACKKNIFE_FILE,file= PATH_TO_JACKKNIFE_ANALYSIS_OUTPUT//trim('jackknife_analysis_zmin')//'_'//trim(xmin)//&
+       '_zmax_'//trim(xmax)//'_Nside_'//trim(Ns)//'.txt')
+
+  Do index_jackknife_analysis=1,dimension_jackknife_analysis
+
+     write(UNIT_JACKKNIFE_FILE,89) jackknife_dipole_amplitude(index_jackknife_analysis),&
+          jackknife_galactic_latitude(index_jackknife_analysis),jackknife_galactic_longitude(index_jackknife_analysis)
+
+89   Format(3E20.10)
+
+  End Do
+
+  close(UNIT_JACKKNIFE_FILE)
+
+  deallocate(jackknife_data_indices,jackknife_dipole_amplitude,jackknife_galactic_longitude,jackknife_galactic_latitude,stat=status1)
+
+end subroutine jackknife_analysis
 
 end module functions

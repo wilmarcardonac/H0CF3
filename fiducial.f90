@@ -14,6 +14,7 @@ Module fiducial
   Integer(kind=I4B),parameter :: nsmax = 1  ! Nside FOR NUMBER COUNTS MAP
   Integer*4,parameter :: nlmax = 2*nsmax    ! HIGHEST MULTIPOLE
   Integer*4,parameter :: UNIT_EXE_FILE = 90           ! UNIT NUMBER FOR EXECUTION INFORMATION FILE
+  Integer*4,parameter :: UNIT_JACKKNIFE_FILE = 91     ! UNIT NUMBER FOR JACKKNIFE ANALYSIS FILE 
   Integer*4,parameter :: UNIT_ANAFAST_PAR_FILE = 92   ! UNIT NUMBER FOR FILE
   Integer(kind=I4B), parameter :: RING_ORDERING = 1 
   Integer(kind=I4B), parameter :: DEGREE_REMOVE_DIPOLE = 2
@@ -55,6 +56,6 @@ Module fiducial
 !  Character(len=*),parameter :: PATH_TO_PLANCK_CMB_MAP = './data/COM_CompMap_CMB-smica_2048_R1.20.fits' ! PLANCK CMB MAP TO BE USED (NESTED ORDERING). 2013 release including inpainted SMICA
 !  Character(len=*),parameter :: PATH_TO_VSK_MASK = './vsk_maps/vsk_mask.fits' ! VSK MASK TO BE USED (RING ORDERING)
 !  Character(len=*),parameter :: PATH_TO_VSK_SPECTRA = './vsk_angular_power_spectrum/' 
-!  Character(len=*),parameter :: PATH_TO_CMB_FREQUENCY_MAPS = './cmb_maps/frequency-maps/' ! PATH TO CMB FREQUENCY MAPS (DATA AND FFP8.1 SIMULATIONS)
+  Character(len=*),parameter :: PATH_TO_JACKKNIFE_ANALYSIS_OUTPUT = './output/' ! PATH TO CMB FREQUENCY MAPS (DATA AND FFP8.1 SIMULATIONS)
 
 End Module fiducial
