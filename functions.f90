@@ -58,12 +58,33 @@ subroutine read_data_CF3(path_to_datafile)
 
 end subroutine read_data_CF3
 
-subroutine write_python_script_angular_distribution_galaxies()
+subroutine write_python_script_angular_distribution_galaxies(option)
     
     use fiducial
     Implicit none
 
-    open(10, file='./scripts/angular_distribution_galaxies_CF3.py')
+    Integer*4 :: option
+
+    If (option .eq. 1) then
+
+       open(10, file='./scripts/ang_dist_gal_whole_CF3_dataset.py')
+
+    Else If (option .eq. 2) then
+
+       open(10, file='./scripts/ang_dist_gal_redshift_bins_CF3_dataset.py')
+       
+    Else If (option .eq. 3) then
+
+       open(10, file='./scripts/ang_dist_gal_redshift_bins_cumulative_CF3_dataset.py')
+
+    Else
+
+       write(UNIT_EXE_FILE,*) 'SUBROUTINE TO WRITE PYTHON SCRIPT ONLY ACCEPTS THREE OPTIONS: 1, 2, OR 3.'&
+             &'DIFFERENT OPTIONS WAS GIVEN'
+       
+       stop
+
+    End If
 
     write(10,'(a)') 'import numpy as np'
     write(10,'(a)') 'import math'
@@ -173,81 +194,261 @@ subroutine write_python_script_angular_distribution_galaxies()
     write(10,'(a)') '    data[index,5] = DeJ[index]                 # DECLINATION'
     write(10,'(a)') '    data[index,6] = Vmod[index]/speed_of_light # CORRECTED REDSHIFT'
 
-    write(10,'(a)') 'z_max_temp = z_min + z_step'
+    If (option .eq. 1) then
 
-    write(10,'(a)') 'z_min_temp = z_min'
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
 
-    write(10,'(a)') 'counter = 0'
+       write(10,'(a)') 'for index in range(len(Dist)):'
 
-    write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+       write(10,'(a)') '    if ( (data[index,0] > z_min) & (data[index,0] <= z_min+z_step) ):'
 
-    write(10,'(a)') 'while (z_max_temp <= z_max):'
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[0],lonlat=True,coord='G')"
 
-    write(10,'(a)') '    for index in range(len(Dist)):'
+       write(10,'(a)') '    elif ( (data[index,0] > z_min+z_step) & (data[index,0] <= z_min+2.*z_step) ):'
 
-    write(10,'(a)') '        if ( (data[index,0] > z_min_temp) & (data[index,0] <= z_max_temp) ):'
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[1],lonlat=True,coord='G')"
 
-    write(10,'(a)') "            hp.projplot(data[index,2],data[index,3],marker[counter],lonlat=True,coord='G')"
-    
-    write(10,'(a)') '    z_max_temp = z_max_temp + z_step'
+       write(10,'(a)') '    elif ( (data[index,0] > z_min+2.*z_step) & (data[index,0] <= z_min+3.*z_step) ):'
 
-    write(10,'(a)') '    counter = counter + 1'
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[2],lonlat=True,coord='G')"
 
-    write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_whole_CF3_dataset.pdf')"
+       write(10,'(a)') '    elif ( (data[index,0] > z_min+3.*z_step) & (data[index,0] <= z_min+4.*z_step) ):'
 
-    write(10,'(a)') 'py.close()'
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[3],lonlat=True,coord='G')"
 
-!!$    write(10,'(a)') 'z_max_temp = z_min + z_step'
-!!$
-!!$    write(10,'(a)') 'z_min_temp = z_min'
-!!$
-!!$    write(10,'(a)') 'counter = 0'
-!!$
-!!$    write(10,'(a)') 'while (z_max_temp <= z_max):'
-!!$
-!!$    write(10,'(a)') "    hp.graticule(dpar=10.,dmer=10.,coord='G')"
-!!$
-!!$    write(10,'(a)') '    for index in range(len(Dist)):'
-!!$
-!!$    write(10,'(a)') '        if ( (data[index,0] > z_min_temp) & (data[index,0] <= z_max_temp) ):'
-!!$
-!!$    write(10,'(a)') "            hp.projplot(data[index,2],data[index,3],marker[counter],lonlat=True,coord='G')"
-!!$    
-!!$    write(10,'(a)') '    z_max_temp = z_max_temp + z_step'
-!!$
-!!$    write(10,'(a)') '    counter = counter + 1'
-!!$
-!!$    write(10,'(a)') "    py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
-!!$         &str(z_min_temp)+'_z_max'+str(z_max_temp)+'_CF3.pdf')"
-!!$
-!!$    write(10,'(a)') '    py.close()'
-!!$
-!!$    write(10,'(a)') 'z_max_temp = z_min + z_step'
-!!$
-!!$    write(10,'(a)') 'z_min_temp = z_min'
-!!$
-!!$    write(10,'(a)') 'counter = 0'
-!!$
-!!$    write(10,'(a)') 'while (z_max_temp <= z_max):'
-!!$
-!!$    write(10,'(a)') "    hp.graticule(dpar=10.,dmer=10.,coord='G')"
-!!$
-!!$    write(10,'(a)') '    for index in range(len(Dist)):'
-!!$
-!!$    write(10,'(a)') '        if ( (data[index,0] > z_min_temp) & (data[index,0] <= z_max_temp) ):'
-!!$
-!!$    write(10,'(a)') "            hp.projplot(data[index,2],data[index,3],marker[counter],lonlat=True,coord='G')"
-!!$
-!!$    write(10,'(a)') '    z_min_temp = z_max_temp'
-!!$    
-!!$    write(10,'(a)') '    z_max_temp = z_max_temp + z_step'
-!!$
-!!$    write(10,'(a)') '    counter = counter + 1'
-!!$
-!!$    write(10,'(a)') "    py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
-!!$         &str(z_min_temp)+'_z_max'+str(z_max_temp)+'_CF3.pdf')"
-!!$
-!!$    write(10,'(a)') '    py.close()'
+       write(10,'(a)') '    elif ( (data[index,0] > z_min+4.*z_step) & (data[index,0] <= z_min+5.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[4],lonlat=True,coord='G')"
+
+       write(10,'(a)') '    elif ( (data[index,0] > z_min+5.*z_step) & (data[index,0] <= z_min+6.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[5],lonlat=True,coord='G')"
+
+       write(10,'(a)') '    elif ( (data[index,0] > z_min+6.*z_step) & (data[index,0] <= z_min+7.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[6],lonlat=True,coord='G')"
+
+       write(10,'(a)') '    elif ( (data[index,0] > z_min+7.*z_step) & (data[index,0] <= z_min+8.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[7],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_whole_CF3_dataset.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+    Else If (option .eq. 2) then
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min) & (data[index,0] <= z_min+z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[0],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min+z_step) & (data[index,0] <= z_min+2.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[1],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min+z_step)+'_z_max'+str(z_min+2.*z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min+2.*z_step) & (data[index,0] <= z_min+3.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[2],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min+2.*z_step)+'_z_max'+str(z_min+3.*z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min+3.*z_step) & (data[index,0] <= z_min+4.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[3],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min+3.*z_step)+'_z_max'+str(z_min+4.*z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min+4.*z_step) & (data[index,0] <= z_min+5.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[4],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min+4.*z_step)+'_z_max'+str(z_min+5.*z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min+5.*z_step) & (data[index,0] <= z_min+6.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[5],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min+5.*z_step)+'_z_max'+str(z_min+6.*z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min+6.*z_step) & (data[index,0] <= z_min+7.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[6],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min+6.*z_step)+'_z_max'+str(z_min+7.*z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min+7.*z_step) & (data[index,0] <= z_min+8.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[7],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min+7.*z_step)+'_z_max'+str(z_min+8.*z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+    Else If (option .eq. 3) then
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min) & (data[index,0] <= z_min+z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[0],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min) & (data[index,0] <= z_min+2.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[1],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+2.*z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min) & (data[index,0] <= z_min+3.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[2],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+3.*z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min) & (data[index,0] <= z_min+4.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[3],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+4.*z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min) & (data[index,0] <= z_min+5.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[4],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+5.*z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min) & (data[index,0] <= z_min+6.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[5],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+6.*z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min) & (data[index,0] <= z_min+7.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[6],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+7.*z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(Dist)):'
+
+       write(10,'(a)') '    if ( (data[index,0] > z_min) & (data[index,0] <= z_min+8.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(data[index,2],data[index,3],marker[7],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_galaxies_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+8.*z_step)+'_CF3.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+    End If
 
     write(10,'(a)') 'exit()'
 
@@ -255,19 +456,27 @@ subroutine write_python_script_angular_distribution_galaxies()
 
 end subroutine write_python_script_angular_distribution_galaxies
 
-subroutine write_mpi_file(name_python_file)
+subroutine write_mpi_file(name_python_file,option)
     
   Implicit none
 
   character(len=*) :: name_python_file
-  
+
+  Integer*4 :: option
+
   open(12,file='./scripts/'//trim(name_python_file)//'.mpi')
 
   write(12,'(a11)') '#!/bin/bash'
   write(12,'(a12)') '#SBATCH -N 1'
-  write(12,'(a23)') '#SBATCH -J ANG-DIST-CF3'
+  If (option .eq. 1) then
+  write(12,'(a23)') '#SBATCH -J 1-ANG-DIST-CF3'
+  Else If (option .eq. 2) then
+  write(12,'(a23)') '#SBATCH -J 2-ANG-DIST-CF3'
+  Else If (option .eq. 3) then
+  write(12,'(a23)') '#SBATCH -J 3-ANG-DIST-CF3'
+  End If
   write(12,'(a12)') '#SBATCH -n 1'
-  write(12,'(a21)') '#SBATCH -t 2-00:00:00'
+  write(12,'(a21)') '#SBATCH -t 2-12:00:00'
   write(12,'(a21)') '#SBATCH -o job.%J.out'
   write(12,*) 
   write(12,'(a)') 'prun python '//trim(name_python_file)//'.py'

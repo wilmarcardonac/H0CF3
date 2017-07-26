@@ -22,7 +22,8 @@ Program h0cf3
     Implicit none
 
     Integer*8 :: i
-
+    Integer*4 :: index_options
+    
     Real*8 :: testdipamp,test1,test2
 
 !######################################
@@ -59,11 +60,29 @@ Program h0cf3
 
        write(UNIT_EXE_FILE,*) 'FIGURES ANGULAR GALAXY DISTRIBUTION BEING CREATED'
 
-       call write_python_script_angular_distribution_galaxies()
+       Do index_options=1,3
 
-       call write_mpi_file('angular_distribution_galaxies_CF3')
+          call write_python_script_angular_distribution_galaxies(index_options)
 
-       call system('cd scripts; sbatch angular_distribution_galaxies_CF3.mpi')
+       End Do
+
+       call write_mpi_file('ang_dist_gal_whole_CF3_dataset',1)
+
+       call write_mpi_file('ang_dist_gal_redshift_bins_CF3_dataset',2)
+
+       call write_mpi_file('ang_dist_gal_redshift_bins_cumulative_CF3_dataset',3)
+
+       write(UNIT_EXE_FILE,*) ' '
+
+       call system('cd scripts; sbatch ang_dist_gal_whole_CF3_dataset.mpi')
+
+       write(UNIT_EXE_FILE,*) ' '
+
+       call system('cd scripts; sbatch ang_dist_gal_redshift_bins_CF3_dataset.mpi')
+
+       write(UNIT_EXE_FILE,*) ' '
+
+       call system('cd scripts; sbatch ang_dist_gal_redshift_bins_cumulative_CF3_dataset.mpi')
 
        write(UNIT_EXE_FILE,*) ' '
 
