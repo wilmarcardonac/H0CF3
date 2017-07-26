@@ -75,6 +75,8 @@ Program h0cf3
 
     End If
 
+    stop
+
     call compute_number_counts_map(1.d-2,5.d-2,.false.,i,testdipamp,test1,test2)
 
     print *, testdipamp, test1, test2
