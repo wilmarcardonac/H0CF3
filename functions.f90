@@ -514,7 +514,22 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
 
   zbounds(:) = 0.d0
 
-  If (.not.jackknife) then
+  If (jackknife) then
+
+     If (data_index_excluded .ge. 1) then
+
+        continue
+
+     Else
+
+        write(UNIT_EXE_FILE,*) 'WHEN DOING JACKKNIFE ANALYSIS SET "data_index_excluded" TO A POSITIVE INTEGER'&
+             &'SUBROUTINE "compute_number_counts_map" '
+
+        stop
+
+     End If
+
+  Else
 
      If (data_index_excluded .lt. 0) then
 
