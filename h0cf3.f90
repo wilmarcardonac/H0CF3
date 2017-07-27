@@ -14,6 +14,7 @@ Program h0cf3
   use fiducial
   use arrays
   use functions 
+  use omp_lib
 
 !#################################
 ! DECLARE VARIABLES AND PARAMETERS
@@ -24,13 +25,13 @@ Program h0cf3
     Integer*8 :: i
     Integer*4 :: index_options
     
-    Real*8 :: testdipamp,test1,test2
+    Real*8 :: testdipamp,test1,test2,wtime
 
 !######################################
 ! INITIALIZATION OF VARIABLES AND FILES
 !######################################
 
-    i = -1
+    i = -1 
 
     open(UNIT_EXE_FILE,file=EXECUTION_INFORMATION)
 
@@ -94,12 +95,28 @@ Program h0cf3
 
     End If
 
-    stop
+    write(UNIT_EXE_FILE,*) 'COMPUTING NUMBER COUNTS MAPS FOR DIFFERENT REDSHIFT BINS'
 
-    call compute_number_counts_map(redshift_min,redshift_min+redshift_step,do_jackknife_analysis,&
-         i,testdipamp,test1,test2)
+    write(UNIT_EXE_FILE,*) ' '
 
-    print *, testdipamp, test1, test2
+    write(UNIT_EXE_FILE,*) 'AND DOING CORRESPONDING JACKKNIFE ANALYSIS'
+
+    write(UNIT_EXE_FILE,*) ' '
+
+    wtime = omp_get_wtime() ! SETTING STARTING TIME
+
+    !$omp Parallel Do
+    Do index_options=1,number_redshift_bins
+
+       call compute_number_counts_map(redshift_min,redshift_min+index_options*redshift_step,.false.,&
+            i,testdipamp,test1,test2)
+
+       call jackknife_analysis(redshift_min,redshift_min+index_options*redshift_step)
+
+    End Do
+    !$omp End Parallel Do 
+
+    write(UNIT_EXE_FILE,*) 'THE ANALYSIS WAS PERFORMED IN ',(omp_get_wtime()-wtime)/3.6d3,' HOURS'
 
     close(UNIT_EXE_FILE)
 

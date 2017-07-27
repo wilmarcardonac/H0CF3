@@ -523,7 +523,7 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
      Else
 
         write(UNIT_EXE_FILE,*) 'WHEN DOING JACKKNIFE ANALYSIS SET "data_index_excluded" TO A POSITIVE INTEGER'&
-             &'SUBROUTINE "compute_number_counts_map" '
+             &'SUBROUTINE "compute_number_counts_map". CURRENT VALUE IS: ', data_index_excluded
 
         stop
 
@@ -538,7 +538,7 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
      Else
 
         write(UNIT_EXE_FILE,*) 'WHEN NOT DOING JACKKNIFE ANALYSIS SET "data_index_excluded" TO A NEGATIVE INTEGER'&
-             &'SUBROUTINE "compute_number_counts_map" '
+             &'SUBROUTINE "compute_number_counts_map". CURRENT VALUE IS: ', data_index_excluded
 
         stop
 
@@ -546,8 +546,8 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
 
   End If
 
-  write(xmin,'(F5.2)') zmin
-  write(xmax,'(F5.2)') zmax
+  write(xmin,'(F5.3)') zmin
+  write(xmax,'(F5.3)') zmax
   write(Ns,'(I4.4)') nsmax
 
   allocate (map(0:npixC-1,1:1), map_nc(0:npixC-1,1:1), shot_noise(0:npixC-1,1:1),& 
@@ -702,6 +702,7 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
      call output_map(map_nc,header,'./output/number_counts_map_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//&
           '_Nside_'//trim(Ns)//'.fits')
 
+     !HERE I MUST IMPLEMENT ANGULAR POWER SPECTRUM COMPUTATION
   End If
 
   call remove_dipole(nsmax,map_nc(0:npixC-1,1),RING_ORDERING,DEGREE_REMOVE_DIPOLE,multipoles,zbounds,HPX_DBADVAL)
@@ -710,9 +711,9 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
 
   call vec2ang(multipoles(1:3),theta,phi)
 
-  dip_longitude = phi
+  dip_longitude = phi*RAD2DEG
 
-  dip_latitude = HALFPI - theta
+  dip_latitude = (HALFPI - theta)*RAD2DEG
 
   deallocate (map, shot_noise, mask, map_nc, stat = status1)
 
@@ -727,6 +728,7 @@ subroutine jackknife_analysis(zmin,zmax)
 !  use head_fits
   use fiducial
   use arrays
+  use omp_lib
 
   Implicit none
 
@@ -737,8 +739,8 @@ subroutine jackknife_analysis(zmin,zmax)
 
   Integer*8 :: counter_data_points, data_index, index_jackknife_analysis, dimension_jackknife_analysis
 
-  write(xmin,'(F5.2)') zmin
-  write(xmax,'(F5.2)') zmax
+  write(xmin,'(F5.3)') zmin
+  write(xmax,'(F5.3)') zmax
   write(Ns,'(I4.4)') nsmax
 
   counter_data_points = 0

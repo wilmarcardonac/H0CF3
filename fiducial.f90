@@ -11,6 +11,10 @@ Module fiducial
   !#################################
   
   Real*8,parameter    :: miss = -1.63750d-13
+  Real*8, parameter :: redshift_min = 1.d-2 ! SET LOWEST REDSHIFT FOR ANALYSIS 
+  Real*8, parameter :: redshift_max = 5.d-2 ! SET HIGHEST REDSHIFT FOR ANALYSIS 
+  Real*8, parameter :: redshift_step = 5.d-3 ! SET STEP IN REDSHIFT FOR ANALYSIS  
+
   Integer(kind=I4B),parameter :: nsmax = 1  ! Nside FOR NUMBER COUNTS MAP
   Integer*4,parameter :: nlmax = 2*nsmax    ! HIGHEST MULTIPOLE
   Integer*4,parameter :: UNIT_EXE_FILE = 90           ! UNIT NUMBER FOR EXECUTION INFORMATION FILE
@@ -18,13 +22,10 @@ Module fiducial
   Integer*4,parameter :: UNIT_ANAFAST_PAR_FILE = 92   ! UNIT NUMBER FOR FILE
   Integer(kind=I4B), parameter :: RING_ORDERING = 1 
   Integer(kind=I4B), parameter :: DEGREE_REMOVE_DIPOLE = 2
-  Real*8, parameter :: redshift_min = 1.d-2 ! SET LOWEST REDSHIFT FOR ANALYSIS 
-  Real*8, parameter :: redshift_max = 5.d-2 ! SET HIGHEST REDSHIFT FOR ANALYSIS 
-  Real*8, parameter :: redshift_step = 5.d-3 ! SET STEP IN REDSHIFT FOR ANALYSIS  
+  Integer*2,parameter :: number_redshift_bins = 8 ! NUMBER REDSHIFT BINS IN THE ANALYSIS. BE CAREFUL WHEN CHANGING 'redshift_step', 'redshift_min', OR 'redshift_max'
+
   Character(len=*),parameter :: ORDERING_NC_MAPS = 'RING'!'NESTED'    ! ORDERING NUMBER COUNTS MAPS
   Character(len=*),parameter :: SYS_COORD = 'G' ! MAP COORDINATE SYSTEM 
-
-
 
   !################################
   ! VARIABLES IN NUMBER COUNTS MAPS 
@@ -39,7 +40,7 @@ Module fiducial
   Integer*8 :: number_galaxies_in_CF3  ! NUMBER OF GALAXIES IN CF3 DATA SET
 
   Logical,parameter   :: do_galaxy_distribution_plots = .false. ! DO PLOTS OF ANGULAR DISTRIBUTION OF GALAXIES IF SET IT TRUE
-  Logical,parameter   :: do_jackknife_analysis = .false.        ! DO JACKKNIFE ANALYSIS IF SET IT TRUE
+  Logical,parameter   :: do_jackknife_analysis = .true.        ! DO JACKKNIFE ANALYSIS IF SET IT TRUE
 
   Character(len=*),parameter :: beam_file = " '' "    ! PATH TO BEAM FILE
   Character(len=*),parameter :: almsfile = " '' "     ! PATH ALMS FILE
