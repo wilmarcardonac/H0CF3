@@ -48,6 +48,14 @@ Program h0cf3
 
     write(UNIT_EXE_FILE,*) ' '
 
+    write(UNIT_EXE_FILE,*) 'MINIMUM REDSHIFT IN THE CATALOGUE IS: ', minval(redshift)
+
+    write(UNIT_EXE_FILE,*) ' '
+
+    write(UNIT_EXE_FILE,*) 'MAXIMUM REDSHIFT IN THE CATALOGUE IS: ', maxval(redshift) 
+
+    write(UNIT_EXE_FILE,*) ' '
+
     write(UNIT_EXE_FILE,*) 'N_side = ', nsmax, ' IN THE CURRENT ANALYSIS; THIS CORRESPONDS TO A NUMBER '
     write(UNIT_EXE_FILE,*) 'OF PIXELS IN THE NUMBER COUNTS MAPS EQUAL TO ', npixC
 
@@ -105,16 +113,19 @@ Program h0cf3
 
     wtime = omp_get_wtime() ! SETTING STARTING TIME
 
-    !$omp Parallel Do
+    !!$omp Parallel Do
     Do index_options=1,number_redshift_bins
 
        call compute_number_counts_map(redshift_min,redshift_min+index_options*redshift_step,.false.,&
             i,testdipamp,test1,test2)
 
+       write(UNIT_EXE_FILE,*) 'AMPLITUDE DIPOLE ZMIN ',redshift_min,' ZMAX ',&
+            redshift_min+index_options*redshift_step,' IS ', testdipamp
+
        call jackknife_analysis(redshift_min,redshift_min+index_options*redshift_step)
 
     End Do
-    !$omp End Parallel Do 
+    !!$omp End Parallel Do 
 
     write(UNIT_EXE_FILE,*) 'THE ANALYSIS WAS PERFORMED IN ',(omp_get_wtime()-wtime)/3.6d3,' HOURS'
 
