@@ -707,7 +707,7 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
 
   call remove_dipole(nsmax,map_nc(0:npixC-1,1),RING_ORDERING,DEGREE_REMOVE_DIPOLE,multipoles,zbounds,HPX_DBADVAL)
 
-  dip_amplitude = sqrt(multipoles(1)**2 + multipoles(2)**2 + multipoles(3)**3)
+  dip_amplitude = sqrt(multipoles(1)**2 + multipoles(2)**2 + multipoles(3)**2)
 
   call vec2ang(multipoles(1:3),theta,phi)
 
@@ -718,6 +718,66 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
   deallocate (map, shot_noise, mask, map_nc, stat = status1)
 
 end subroutine compute_number_counts_map
+
+subroutine test_remove_dipole()
+
+  use healpix_types
+  use udgrade_nr, only: udgrade_ring, udgrade_nest
+  use pix_tools, only: nside2npix,convert_ring2nest, convert_nest2ring,remove_dipole, ang2pix_ring, vec2ang
+  use fitstools, only: getsize_fits, input_map, output_map
+  use head_fits
+  use fiducial
+  use arrays
+
+  Implicit none
+
+!  Character(len=80),dimension(1:60) :: header
+!  Character(len=4) :: Ns
+!  Character(len=5) :: xmin,xmax
+
+  Real*8 :: dip_amplitude,dip_latitude,dip_longitude
+  Real(kind=DP),dimension(0:DEGREE_REMOVE_DIPOLE*DEGREE_REMOVE_DIPOLE-1) :: multipoles ! SAVES MONOPOLE AND DIPOLE OF CMB MAP 
+  Real(kind=DP),dimension(1:2) :: zbounds ! BOUNDS TO COMPUTE DIPOLE AND MONOPOLE
+  Real(kind=DP) :: theta,phi ! COLATITUDE AND LONGITUDE
+
+!  Integer*8 :: data_index, index_i,data_index_excluded
+!  Integer(kind=I8B) :: ipring ! NUMBERS PIXELS IN NUMBER COUNTS MAP
+
+!  Logical :: jackknife
+!  Logical :: exist
+
+  zbounds(1) = 0.d0
+
+  zbounds(2) = -0.d0
+
+  allocate (map(0:npixC-1,1:1), stat = status1)
+
+  call input_map('./data/number_counts_map_zmin_0.010_zmax_0.015_Nside_0001.fits',map(0:npixC-1,1:1),npixC,1)
+
+  call remove_dipole(nsmax,map(0:npixC-1,1),RING_ORDERING,DEGREE_REMOVE_DIPOLE,multipoles, zbounds )
+
+  dip_amplitude = sqrt(multipoles(1)**2 + multipoles(2)**2 + multipoles(3)**2)
+
+  write(UNIT_EXE_FILE,*) 'DIPOLE AMPLITUDE IS ', dip_amplitude
+
+  call vec2ang(multipoles(1:3),theta,phi)
+
+  dip_longitude = phi*RAD2DEG
+
+  dip_latitude = (HALFPI - theta)*RAD2DEG
+
+  write(UNIT_EXE_FILE,*) ' '
+
+  write(UNIT_EXE_FILE,*) 'DIPOLE LONGITUDE IS ', dip_longitude
+
+  write(UNIT_EXE_FILE,*) ' '
+
+  write(UNIT_EXE_FILE,*) 'DIPOLE LATITUDE IS ', dip_latitude
+
+  deallocate(map,stat = status1)
+
+end subroutine test_remove_dipole
+
 
 subroutine jackknife_analysis(zmin,zmax)
 

@@ -41,6 +41,7 @@ Module fiducial
 
   Logical,parameter   :: do_galaxy_distribution_plots = .false. ! DO PLOTS OF ANGULAR DISTRIBUTION OF GALAXIES IF SET IT TRUE
   Logical,parameter   :: do_jackknife_analysis = .true.        ! DO JACKKNIFE ANALYSIS IF SET IT TRUE
+  Logical,parameter   :: do_tests = .false.   ! TEST THE CODE IF SET IT TRUE 
 
   Character(len=*),parameter :: beam_file = " '' "    ! PATH TO BEAM FILE
   Character(len=*),parameter :: almsfile = " '' "     ! PATH ALMS FILE

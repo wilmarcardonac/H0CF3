@@ -61,6 +61,29 @@ Program h0cf3
 
     write(UNIT_EXE_FILE,*) ' '
 
+!###########################
+! TESTING CODE (IF REQUIRED)
+!###########################
+
+    If (do_tests) then
+
+       write(UNIT_EXE_FILE,*) 'STARTING TESTS OF CODE'
+
+       call test_remove_dipole()
+       
+       write(UNIT_EXE_FILE,*) ' '
+
+       write(UNIT_EXE_FILE,*) 'FINISHING TESTS OF CODE'
+
+       stop
+       
+    Else
+
+       continue
+
+    End If
+
+
 !################
 ! ANALYSIS STARTS 
 !################
@@ -122,8 +145,19 @@ Program h0cf3
        write(UNIT_EXE_FILE,*) 'AMPLITUDE DIPOLE ZMIN ',redshift_min,' ZMAX ',&
             redshift_min+index_options*redshift_step,' IS ', testdipamp
 
+       write(UNIT_EXE_FILE,*) 'DIPOLE LATITUDE IS ', test1
+
+       write(UNIT_EXE_FILE,*) 'DIPOLE LONGITUDE IS ', test2
+
+       write(UNIT_EXE_FILE,*) ' '
+
        call jackknife_analysis(redshift_min,redshift_min+index_options*redshift_step)
 
+       write(UNIT_EXE_FILE,*) 'JACKKNIFE ANALYSIS IN RED-SHIFT BIN ZMIN ',redshift_min,' ZMAX ',&
+            redshift_min+index_options*redshift_step,' ENDED '
+
+       write(UNIT_EXE_FILE,*) ' '
+       
     End Do
     !!$omp End Parallel Do 
 
