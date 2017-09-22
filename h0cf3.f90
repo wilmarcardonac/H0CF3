@@ -130,9 +130,17 @@ Program h0cf3
 
     write(UNIT_EXE_FILE,*) ' '
 
-    write(UNIT_EXE_FILE,*) 'AND DOING CORRESPONDING JACKKNIFE ANALYSIS'
+    If (do_jackknife_analysis) then
 
-    write(UNIT_EXE_FILE,*) ' '
+       write(UNIT_EXE_FILE,*) 'AND DOING CORRESPONDING JACKKNIFE ANALYSIS'
+
+       write(UNIT_EXE_FILE,*) ' '
+
+    Else
+
+       continue
+
+    End If
 
     wtime = omp_get_wtime() ! SETTING STARTING TIME
 
@@ -151,12 +159,20 @@ Program h0cf3
 
        write(UNIT_EXE_FILE,*) ' '
 
-       call jackknife_analysis(redshift_min,redshift_min+index_options*redshift_step)
+       If (do_jackknife_analysis) then
 
-       write(UNIT_EXE_FILE,*) 'JACKKNIFE ANALYSIS IN RED-SHIFT BIN ZMIN ',redshift_min,' ZMAX ',&
-            redshift_min+index_options*redshift_step,' ENDED '
+          call jackknife_analysis(redshift_min,redshift_min+index_options*redshift_step)
 
-       write(UNIT_EXE_FILE,*) ' '
+          write(UNIT_EXE_FILE,*) 'JACKKNIFE ANALYSIS IN RED-SHIFT BIN ZMIN ',redshift_min,' ZMAX ',&
+               redshift_min+index_options*redshift_step,' ENDED '
+
+          write(UNIT_EXE_FILE,*) ' '
+
+       Else
+
+          continue
+
+       End If
        
     End Do
     !!$omp End Parallel Do 

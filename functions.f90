@@ -558,7 +558,7 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
   map(0:npixC-1,1) = 0.d0 ! INITIALIZATION OF NUMBER COUNTS MAP
   map_nc(0:npixC-1,1) = HPX_DBADVAL ! INITIALIZATION OF NORMALISED NUMBER COUNTS MAP
   shot_noise(0:npixC-1,1) = HPX_DBADVAL ! INITIALIZATION OF SHOT NOISE MASK
-  mask(0:npixC-1,1) = HPX_DBADVAL ! INITIALIZATION OF NUMBER COUNTS MASK
+  mask(0:npixC-1,1) = 0.d0 ! INITIALIZATION OF NUMBER COUNTS MASK
 
   Do data_index=1,number_galaxies_in_CF3
 
@@ -622,7 +622,7 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
 
   Do index_i=0,npixC-1
 
-     If ( map(index_i,1) .ne. 0.d0 ) then
+     If ( map(index_i,1) .gt. 0.d0 ) then
 
         mask(index_i,1) = 1.d0
 
@@ -668,6 +668,12 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
 
      call output_map(mask,header,'./output/mask_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//'_Nside_'//trim(Ns)//'.fits')
 
+     write(UNIT_EXE_FILE,*) ' '
+
+     write(UNIT_EXE_FILE,*) 'SKY FRACTION FOR CURRENT RED-SHIFT BIN IS ', sum(mask)/npixC
+
+     write(UNIT_EXE_FILE,*) ' '
+
      inquire(file = './output/shot_noise_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//&
           '_Nside_'//trim(Ns)//'.fits',exist=exist)
 
@@ -702,10 +708,11 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
      call output_map(map_nc,header,'./output/number_counts_map_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//&
           '_Nside_'//trim(Ns)//'.fits')
 
-     !HERE I MUST IMPLEMENT ANGULAR POWER SPECTRUM COMPUTATION
+     ! TO DO: HERE I MUST IMPLEMENT ANGULAR POWER SPECTRUM COMPUTATION
   End If
 
-  call remove_dipole(nsmax,map_nc(0:npixC-1,1),RING_ORDERING,DEGREE_REMOVE_DIPOLE,multipoles,zbounds,HPX_DBADVAL)
+  call remove_dipole(nsmax,map_nc(0:npixC-1,1),RING_ORDERING,DEGREE_REMOVE_DIPOLE,multipoles,zbounds,&
+       HPX_DBADVAL,mask(0:npixC-1,1))
 
   dip_amplitude = sqrt(multipoles(1)**2 + multipoles(2)**2 + multipoles(3)**2)
 
