@@ -754,20 +754,10 @@ subroutine test_remove_dipole()
 
   Implicit none
 
-!  Character(len=80),dimension(1:60) :: header
-!  Character(len=4) :: Ns
-!  Character(len=5) :: xmin,xmax
-
   Real*8 :: dip_amplitude,dip_latitude,dip_longitude
   Real(kind=DP),dimension(0:DEGREE_REMOVE_DIPOLE*DEGREE_REMOVE_DIPOLE-1) :: multipoles ! SAVES MONOPOLE AND DIPOLE OF CMB MAP 
   Real(kind=DP),dimension(1:2) :: zbounds ! BOUNDS TO COMPUTE DIPOLE AND MONOPOLE
   Real(kind=DP) :: theta,phi ! COLATITUDE AND LONGITUDE
-
-!  Integer*8 :: data_index, index_i,data_index_excluded
-!  Integer(kind=I8B) :: ipring ! NUMBERS PIXELS IN NUMBER COUNTS MAP
-
-!  Logical :: jackknife
-!  Logical :: exist
 
   zbounds(1) = 0.d0
 
@@ -818,7 +808,7 @@ subroutine jackknife_analysis(zmin,zmax)
   Character(len=4) :: Ns
   Character(len=5) :: xmin,xmax
 
-  Real*8 :: zmin,zmax
+  Real*8 :: zmin,zmax, mean, left68,right68,left95,right95
 
   Integer*8 :: counter_data_points, data_index, index_jackknife_analysis, dimension_jackknife_analysis
 
@@ -887,9 +877,62 @@ subroutine jackknife_analysis(zmin,zmax)
 
   close(UNIT_JACKKNIFE_FILE)
 
+  call compute_confidence_limits(jackknife_dipole_amplitude,mean, left68,right68,left95,right95)
+  ! INCLUDE SUBROUTINE 68 AND 95 % HERE
+
   deallocate(jackknife_data_indices,jackknife_dipole_amplitude,jackknife_galactic_longitude,&
        jackknife_galactic_latitude,stat=status1)
 
 end subroutine jackknife_analysis
+
+subroutine compute_confidence_limits(number_data_points,mean,left68,right68,left95,right95)
+
+  use fiducial
+  use arrays
+
+  Implicit none
+
+!  Character(len=4) :: Ns
+!  Character(len=5) :: xmin,xmax
+
+  Real*8 :: step_size,distance, mean, left68,right68,left95,right95
+
+  Integer*8 :: number_data_points, data_index, temp_index
+
+  step_size = 1.d0
+
+  Do temp_index=1,number_data_points
+
+     Do data_index=1,number_data_points
+
+        If (data_index .gt. temp_index) then
+
+           distance = abs(jackknife_dipole_amplitude(temp_index) - jackknife_dipole_amplitude(data_index))
+
+           If (distance .lt. step_size) then
+
+              step_size = distance
+
+           Else
+
+              continue
+
+           End If
+
+        Else
+
+           continue
+
+        End If
+
+     End Do
+
+  End Do
+
+  print *, step_size
+
+  stop
+
+end subroutine compute_confidence_limits
 
 end module functions
