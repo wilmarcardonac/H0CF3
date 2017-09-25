@@ -4,6 +4,22 @@ module functions
      
 contains
 
+!!$subroutine mean(array,var)
+!!$
+!!$  use fgsl
+!!$
+!!$  Implicit none
+!!$
+!!$  Integer(fgsl_size_t) :: nsize 
+!!$
+!!$  Real(fgsl_double) :: array(:),var
+!!$
+!!$  nsize = size(array)
+!!$    
+!!$  var = fgsl_stats_mean(array,1_fgsl_size_t,nsize)
+!!$
+!!$end Subroutine mean
+
 subroutine read_data_CF3(path_to_datafile)
 
   use arrays

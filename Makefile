@@ -11,6 +11,7 @@ LDIR	= /home/wcardona/software/Healpix/Healpix_3.31/lib
 #F_FL   	= -O3 -I$(INCDIR) -I$(IDIR) -DGFORTRAN -fno-second-underscore -fopenmp -fPIC -g
 F_FL   	= -O3 -Wall -I$(INCDIR) -I$(INFGSL) -DGFORTRAN -fno-second-underscore -fopenmp -fPIC -g 
 LIB_FL 	= -L$(LDIR) -L$(FITSDIR) -lhealpix -lhpxgif -lhpxgif -l$(LIBFITS) #-L$(LIBDIR) #-lfgsl #-llapack -lblas  -lranlib -lrnglib    -Wl,
+#LIB_FL 	= -L$(LDIR) -lhealpix -lhpxgif -lhpxgif -L$(FITSDIR) -l$(LIBFITS) -L$(LIBDIR) -lfgsl #-llapack -lblas  -lranlib -lrnglib    -Wl,
 #####################
 OBJ   =  arrays.o fiducial.o functions.o h0cf3.o
 
