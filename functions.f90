@@ -877,7 +877,7 @@ subroutine jackknife_analysis(zmin,zmax)
 
   close(UNIT_JACKKNIFE_FILE)
 
-  call compute_confidence_limits(dimension_jackknife_analysis,mean,left68,right68,left95,right95)
+  call compute_confidence_limits(dimension_jackknife_analysis,jackknife_dipole_amplitude,mean,left68,right68,left95,right95)
   
   write(UNIT_EXE_FILE,*) ' '
 
@@ -891,7 +891,7 @@ subroutine jackknife_analysis(zmin,zmax)
 
 end subroutine jackknife_analysis
 
-subroutine compute_confidence_limits(number_data_points,mean,left68,right68,left95,right95)
+subroutine compute_confidence_limits(number_data_points,data_array,mean,left68,right68,left95,right95)
 
   use fiducial
   use arrays
@@ -904,12 +904,17 @@ subroutine compute_confidence_limits(number_data_points,mean,left68,right68,left
   Real*8 :: step_size,distance, mean, left68,right68,left95,right95,total95,total68
   Real*8 :: temp_left,temp_right,limit68,limit95,rightbound,leftbound
   Real*8,parameter :: error=1.d-1
+  Real*8,dimension(number_data_points) :: data_array
   
   Integer*8 :: number_data_points, data_index, temp_index, index,counter_left,counter_right
 
-  rightbound = maxval(jackknife_dipole_amplitude)
+!  rightbound = maxval(jackknife_dipole_amplitude)
 
-  leftbound = minval(jackknife_dipole_amplitude)
+!  leftbound = minval(jackknife_dipole_amplitude)
+
+  rightbound = maxval(data_array)
+
+  leftbound = minval(data_array)
 
   step_size = rightbound - leftbound 
 
@@ -917,7 +922,9 @@ subroutine compute_confidence_limits(number_data_points,mean,left68,right68,left
 
   limit95 = 9.5d-1*number_data_points
 
-  mean = sum(jackknife_dipole_amplitude)/number_data_points
+!  mean = sum(jackknife_dipole_amplitude)/number_data_points
+
+  mean = sum(data_array)/number_data_points
 
   Do temp_index=1,number_data_points
 
@@ -925,7 +932,9 @@ subroutine compute_confidence_limits(number_data_points,mean,left68,right68,left
 
         If (data_index .gt. temp_index) then
 
-           distance = abs(jackknife_dipole_amplitude(temp_index) - jackknife_dipole_amplitude(data_index))
+!           distance = abs(jackknife_dipole_amplitude(temp_index) - jackknife_dipole_amplitude(data_index))
+
+           distance = abs(data_array(temp_index) - data_array(data_index))
 
            If ((distance .lt. step_size) .and. (distance .gt. 0.d0)) then
 
@@ -959,11 +968,15 @@ subroutine compute_confidence_limits(number_data_points,mean,left68,right68,left
 
      Do index=1,number_data_points
 
-        If ((jackknife_dipole_amplitude(index) .le. temp_right) .and. (jackknife_dipole_amplitude(index) .gt. right68)) then
+!        If ((jackknife_dipole_amplitude(index) .le. temp_right) .and. (jackknife_dipole_amplitude(index) .gt. right68)) then
+
+        If ((data_array(index) .le. temp_right) .and. (data_array(index) .gt. right68)) then
 
            counter_right = counter_right + 1
 
-        Else If ((jackknife_dipole_amplitude(index) .ge. temp_left) .and. (jackknife_dipole_amplitude(index) .lt. left68)) then
+!        Else If ((jackknife_dipole_amplitude(index) .ge. temp_left) .and. (jackknife_dipole_amplitude(index) .lt. left68)) then
+
+        Else If ((data_array(index) .ge. temp_left) .and. (data_array(index) .lt. left68)) then
 
            counter_left = counter_left + 1
 
@@ -1001,13 +1014,16 @@ subroutine compute_confidence_limits(number_data_points,mean,left68,right68,left
 
            Do index=1,number_data_points
 
-              If ((jackknife_dipole_amplitude(index) .le. temp_right) .and. &
-                   (jackknife_dipole_amplitude(index) .gt. right95)) then
+!              If ((jackknife_dipole_amplitude(index) .le. temp_right) .and. &
+!                   (jackknife_dipole_amplitude(index) .gt. right95)) then
+
+              If ((data_array(index) .le. temp_right) .and. (data_array(index) .gt. right95)) then
 
                  counter_right = counter_right + 1
 
-              Else If ((jackknife_dipole_amplitude(index) .ge. temp_left) .and. &
-                   (jackknife_dipole_amplitude(index) .lt. left95)) then
+!              Else If ((jackknife_dipole_amplitude(index) .ge. temp_left) .and. &
+!                   (jackknife_dipole_amplitude(index) .lt. left95)) then
+              Else If ((data_array(index) .ge. temp_left) .and. (data_array(index) .lt. left95)) then
 
                  counter_left = counter_left + 1
 
