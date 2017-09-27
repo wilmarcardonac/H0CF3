@@ -877,8 +877,14 @@ subroutine jackknife_analysis(zmin,zmax)
 
   close(UNIT_JACKKNIFE_FILE)
 
-  call compute_confidence_limits(jackknife_dipole_amplitude,mean, left68,right68,left95,right95)
-  ! INCLUDE SUBROUTINE 68 AND 95 % HERE
+  call compute_confidence_limits(dimension_jackknife_analysis,mean,left68,right68,left95,right95)
+  
+  write(UNIT_EXE_FILE,*) ' '
+
+  write(UNIT_EXE_FILE,*) 'MEAN, 68% CL, AND 95% CL', mean, left68, right68, left95, right95
+
+  stop
+! INCLUDE SUBROUTINE 68 AND 95 % HERE
 
   deallocate(jackknife_data_indices,jackknife_dipole_amplitude,jackknife_galactic_longitude,&
        jackknife_galactic_latitude,stat=status1)
@@ -895,11 +901,23 @@ subroutine compute_confidence_limits(number_data_points,mean,left68,right68,left
 !  Character(len=4) :: Ns
 !  Character(len=5) :: xmin,xmax
 
-  Real*8 :: step_size,distance, mean, left68,right68,left95,right95
+  Real*8 :: step_size,distance, mean, left68,right68,left95,right95,total95,total68
+  Real*8 :: temp_left,temp_right,limit68,limit95,rightbound,leftbound
+  Real*8,parameter :: error=1.d-1
+  
+  Integer*8 :: number_data_points, data_index, temp_index, index,counter_left,counter_right
 
-  Integer*8 :: number_data_points, data_index, temp_index
+  rightbound = maxval(jackknife_dipole_amplitude)
 
-  step_size = 1.d0
+  leftbound = minval(jackknife_dipole_amplitude)
+
+  step_size = rightbound - leftbound 
+
+  limit68 = 6.8d-1*number_data_points
+
+  limit95 = 9.5d-1*number_data_points
+
+  mean = sum(jackknife_dipole_amplitude)/number_data_points
 
   Do temp_index=1,number_data_points
 
@@ -909,19 +927,11 @@ subroutine compute_confidence_limits(number_data_points,mean,left68,right68,left
 
            distance = abs(jackknife_dipole_amplitude(temp_index) - jackknife_dipole_amplitude(data_index))
 
-           If (distance .lt. step_size) then
+           If ((distance .lt. step_size) .and. (distance .gt. 0.d0)) then
 
               step_size = distance
 
-           Else
-
-              continue
-
            End If
-
-        Else
-
-           continue
 
         End If
 
@@ -929,9 +939,253 @@ subroutine compute_confidence_limits(number_data_points,mean,left68,right68,left
 
   End Do
 
-  print *, step_size
+  step_size = step_size*1.d-8
+  
+  left68 = mean
 
-  stop
+  right68 = mean
+
+  temp_left = mean - step_size
+
+  temp_right = mean + step_size
+
+  total68 = 0
+
+  Do 
+
+     counter_left = 0
+
+     counter_right = 0
+
+     Do index=1,number_data_points
+
+        If ((jackknife_dipole_amplitude(index) .le. temp_right) .and. (jackknife_dipole_amplitude(index) .gt. right68)) then
+
+           counter_right = counter_right + 1
+
+        Else If ((jackknife_dipole_amplitude(index) .ge. temp_left) .and. (jackknife_dipole_amplitude(index) .lt. left68)) then
+
+           counter_left = counter_left + 1
+
+        End If
+
+     End Do
+
+     total68 = counter_left + counter_right + total68 
+
+     If (abs(total68 - limit68) .le. error) then
+ 
+        write(UNIT_EXE_FILE,*) ' '
+
+        write(UNIT_EXE_FILE,*) '68% LIMITS WERE FOUND' 
+
+        left68 = temp_left
+
+        right68 = temp_right
+        
+        total95 = total68
+
+        left95 = left68
+
+        right95 = right68
+
+        temp_left = left95 - step_size
+
+        temp_right = right95 + step_size
+
+        Do 
+
+           counter_left = 0
+
+           counter_right = 0
+
+           Do index=1,number_data_points
+
+              If ((jackknife_dipole_amplitude(index) .le. temp_right) .and. &
+                   (jackknife_dipole_amplitude(index) .gt. right95)) then
+
+                 counter_right = counter_right + 1
+
+              Else If ((jackknife_dipole_amplitude(index) .ge. temp_left) .and. &
+                   (jackknife_dipole_amplitude(index) .lt. left95)) then
+
+                 counter_left = counter_left + 1
+
+              End If
+
+           End Do
+
+           total95 = counter_left + counter_right + total95 
+
+           If (abs(total95 - limit95) .le. error) then
+
+              write(UNIT_EXE_FILE,*) ' '
+
+              write(UNIT_EXE_FILE,*) '95% LIMITS WERE FOUND' 
+
+              left95 = temp_left
+
+              right95 = temp_right
+
+              exit
+
+           Else
+
+              If (counter_right .gt. 0) then
+
+                 right95 = temp_right 
+
+                 temp_right = temp_right + step_size
+
+                 If (temp_right .gt. rightbound) then
+
+                    write(UNIT_EXE_FILE,*) ' '
+
+                    write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
+
+                    write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
+
+                    stop
+
+                 End If
+
+              Else
+
+                 temp_right = temp_right + step_size
+
+                 If (temp_right .gt. rightbound) then
+
+                    write(UNIT_EXE_FILE,*) ' '
+
+                    write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
+
+                    write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
+
+                    stop
+
+                 End If
+
+              End If
+
+              If (counter_left .gt. 0) then
+
+                 left95 = temp_left
+
+                 temp_left = temp_left - step_size
+
+                 If (temp_left .lt. leftbound) then
+
+                    write(UNIT_EXE_FILE,*) ' '
+
+                    write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
+
+                    write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
+
+                    stop
+
+                 End If
+
+              Else
+
+                 temp_left = temp_left - step_size
+
+                 If (temp_left .lt. leftbound) then
+
+                    write(UNIT_EXE_FILE,*) ' '
+
+                    write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
+
+                    write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
+
+                    stop
+
+                 End If
+
+              End If
+
+           End If
+
+        End Do
+
+        exit
+
+     Else
+
+        If (counter_right .gt. 0) then
+
+           right68 = temp_right 
+
+           temp_right = temp_right + step_size
+
+           If (temp_right .gt. rightbound) then
+
+              write(UNIT_EXE_FILE,*) ' '
+
+              write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
+
+              write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
+
+              stop
+
+           End If
+
+        Else
+
+           temp_right = temp_right + step_size
+
+           If (temp_right .gt. rightbound) then
+
+              write(UNIT_EXE_FILE,*) ' '
+
+              write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
+
+              write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
+
+              stop
+
+           End If
+
+        End If
+
+        If (counter_left .gt. 0) then
+
+           left68 = temp_left
+
+           temp_left = temp_left - step_size
+
+           If (temp_left .lt. leftbound) then
+
+              write(UNIT_EXE_FILE,*) ' '
+
+              write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
+
+              write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
+
+              stop
+
+           End If
+
+        Else
+
+           temp_left = temp_left - step_size
+
+           If (temp_left .lt. leftbound) then
+
+              write(UNIT_EXE_FILE,*) ' '
+
+              write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
+
+              write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
+
+              stop
+
+           End If
+
+        End If
+
+     End If
+
+  End Do
 
 end subroutine compute_confidence_limits
 
