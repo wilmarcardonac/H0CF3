@@ -20,6 +20,7 @@ Module fiducial
   Integer*4,parameter :: UNIT_EXE_FILE = 90           ! UNIT NUMBER FOR EXECUTION INFORMATION FILE
   Integer*4,parameter :: UNIT_JACKKNIFE_FILE = 91     ! UNIT NUMBER FOR JACKKNIFE ANALYSIS FILE 
   Integer*4,parameter :: UNIT_ANAFAST_PAR_FILE = 92   ! UNIT NUMBER FOR FILE
+  Integer*4,parameter :: UNIT_CL_FILE = 93  ! UNIT NUMBER FOR CONFIDENCE LIMITS FILE
   Integer(kind=I4B), parameter :: RING_ORDERING = 1 
   Integer(kind=I4B), parameter :: DEGREE_REMOVE_DIPOLE = 2
   Integer*2,parameter :: number_redshift_bins = 8 ! NUMBER REDSHIFT BINS IN THE ANALYSIS. BE CAREFUL WHEN CHANGING 'redshift_step', 'redshift_min', OR 'redshift_max'
@@ -50,12 +51,11 @@ Module fiducial
 !  Character(len=*),parameter :: PATH_TO_ANAFAST_PARAMETER_FILE = './anafast_parameter_files/g_cmb_' ! PATH TO SYNFAST PARAMETERS FILES
 !  Character(len=*),parameter :: PATH_TO_CMB_MAPS = './cmb_maps/map_g_' ! PATH TO SIMULATED CMB MAPS
   Character(len=*),parameter :: PATH_TO_HEALPIX_DATA = '/home/wcardona/software/Healpix/Healpix_3.31/data' ! PATH TO HEALPIX DATA
-
   Character(len=*),parameter :: EXECUTION_INFORMATION = './output/execution_information.txt' ! PATH TO EXECUTION INFORMATION FILE
   character(len=*),parameter :: fmt = '(I4.4)'  ! FORMAT NUMBERS 1 - 1000
   Character(len=*),parameter :: PATH_TO_COSMICFLOWS_DATA = './data/cosmic_flows_data.txt' ! COSMICFLOWS DATA REDSHIFT, DISTANCE, GALACTIC LONGITUDE AND LATITUDE
   Character(len=*),parameter :: PATH_TO_FULL_COSMICFLOWS_DATA = './data/CF-3.txt' ! FULL COSMICFLOWS 3 DATA SET
-!  Character(len=*),parameter :: PATH_TO_PLANCK_CMB_MAP = './data/COM_CompMap_CMB-smica_2048_R1.20.fits' ! PLANCK CMB MAP TO BE USED (NESTED ORDERING). 2013 release including inpainted SMICA
+  Character(len=*),parameter :: PATH_TO_CONFIDENCE_LIMITS_OUTPUT = './output/confidence_limits.txt' ! PATH TO OUTPUT FROM JACKKNIFE ANALYSIS (CL) 
 !  Character(len=*),parameter :: PATH_TO_VSK_MASK = './vsk_maps/vsk_mask.fits' ! VSK MASK TO BE USED (RING ORDERING)
 !  Character(len=*),parameter :: PATH_TO_VSK_SPECTRA = './vsk_angular_power_spectrum/' 
   Character(len=*),parameter :: PATH_TO_JACKKNIFE_ANALYSIS_OUTPUT = './output/' ! PATH TO CMB FREQUENCY MAPS (DATA AND FFP8.1 SIMULATIONS)

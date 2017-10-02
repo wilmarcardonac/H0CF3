@@ -792,7 +792,7 @@ subroutine test_remove_dipole()
 end subroutine test_remove_dipole
 
 
-subroutine jackknife_analysis(zmin,zmax)
+subroutine jackknife_analysis(zmin,zmax,current_amplitude,current_latitude,current_longitude)
 
 !  use healpix_types
 !  use udgrade_nr, only: udgrade_ring, udgrade_nest
@@ -808,7 +808,10 @@ subroutine jackknife_analysis(zmin,zmax)
   Character(len=4) :: Ns
   Character(len=5) :: xmin,xmax
 
-  Real*8 :: zmin,zmax, mean, left68,right68,left95,right95
+  Real*8 :: zmin,zmax, meana, left68a,right68a,left95a,right95a, mean_redshift
+  Real*8 :: meanla, left68la,right68la,left95la,right95la
+  Real*8 :: meanlo, left68lo,right68lo,left95lo,right95lo
+  Real*8 :: current_amplitude,current_latitude,current_longitude
 
   Integer*8 :: counter_data_points, data_index, index_jackknife_analysis, dimension_jackknife_analysis
 
@@ -818,19 +821,21 @@ subroutine jackknife_analysis(zmin,zmax)
 
   counter_data_points = 0
 
+  mean_redshift = 0.d0
+
   Do data_index=1,number_galaxies_in_CF3
 
      If ( (redshift(data_index) .gt. zmin) .and. (redshift(data_index) .le. zmax) ) then
 
-        counter_data_points = counter_data_points + 1
+        counter_data_points = counter_data_points + 1 
 
-     Else
-
-        continue
+        mean_redshift = redshift(data_index) + mean_redshift
 
      End If
 
   End Do
+
+  mean_redshift = mean_redshift/counter_data_points
 
   allocate (jackknife_data_indices(1:counter_data_points),jackknife_dipole_amplitude(1:counter_data_points),&
        jackknife_galactic_longitude(1:counter_data_points),jackknife_galactic_latitude(1:counter_data_points),stat=status1)
@@ -877,11 +882,31 @@ subroutine jackknife_analysis(zmin,zmax)
 
   close(UNIT_JACKKNIFE_FILE)
 
-  call compute_confidence_limits(dimension_jackknife_analysis,jackknife_dipole_amplitude,mean,left68,right68,left95,right95)
+  call compute_confidence_limits(dimension_jackknife_analysis,jackknife_dipole_amplitude,meana,left68a,right68a,&
+       left95a,right95a)
   
   write(UNIT_EXE_FILE,*) ' '
 
-  write(UNIT_EXE_FILE,*) 'MEAN, 68% CL, AND 95% CL', mean, left68, right68, left95, right95
+  write(UNIT_EXE_FILE,*) 'DIPOLE AMPLITUDE: MEAN, 68% CL, AND 95% CL', meana, left68a, right68a, left95a, right95a
+
+  call compute_confidence_limits(dimension_jackknife_analysis,jackknife_galactic_latitude,meanla,left68la,right68la,&
+       left95la,right95la)
+  
+  write(UNIT_EXE_FILE,*) ' '
+
+  write(UNIT_EXE_FILE,*) 'GALACTIC LATITUDE: MEAN, 68% CL, AND 95% CL', meanla, left68la, right68la, left95la, right95la
+
+  call compute_confidence_limits(dimension_jackknife_analysis,jackknife_galactic_longitude,meanlo,left68lo,right68lo,&
+       left95lo,right95lo)
+  
+  write(UNIT_EXE_FILE,*) ' '
+
+  write(UNIT_EXE_FILE,*) 'GALACTIC LONGITUDE: MEAN, 68% CL, AND 95% CL', meanlo, left68lo, right68lo, left95lo, right95lo
+
+  write(UNIT_CL_FILE,90) mean_redshift, current_amplitude, meana, left68a, right68a, left95a, right95a, current_latitude, meanla,&
+       left68la, right68la, left95la, right95la, current_longitude, meanlo, left68lo, right68lo, left95lo, right95lo
+
+90 Format(19E20.10)
 
   stop
 ! INCLUDE SUBROUTINE 68 AND 95 % HERE
@@ -898,19 +923,12 @@ subroutine compute_confidence_limits(number_data_points,data_array,mean,left68,r
 
   Implicit none
 
-!  Character(len=4) :: Ns
-!  Character(len=5) :: xmin,xmax
-
   Real*8 :: step_size,distance, mean, left68,right68,left95,right95,total95,total68
   Real*8 :: temp_left,temp_right,limit68,limit95,rightbound,leftbound
   Real*8,parameter :: error=1.d-1
   Real*8,dimension(number_data_points) :: data_array
   
   Integer*8 :: number_data_points, data_index, temp_index, index,counter_left,counter_right
-
-!  rightbound = maxval(jackknife_dipole_amplitude)
-
-!  leftbound = minval(jackknife_dipole_amplitude)
 
   rightbound = maxval(data_array)
 
@@ -922,8 +940,6 @@ subroutine compute_confidence_limits(number_data_points,data_array,mean,left68,r
 
   limit95 = 9.5d-1*number_data_points
 
-!  mean = sum(jackknife_dipole_amplitude)/number_data_points
-
   mean = sum(data_array)/number_data_points
 
   Do temp_index=1,number_data_points
@@ -931,8 +947,6 @@ subroutine compute_confidence_limits(number_data_points,data_array,mean,left68,r
      Do data_index=1,number_data_points
 
         If (data_index .gt. temp_index) then
-
-!           distance = abs(jackknife_dipole_amplitude(temp_index) - jackknife_dipole_amplitude(data_index))
 
            distance = abs(data_array(temp_index) - data_array(data_index))
 
@@ -948,7 +962,7 @@ subroutine compute_confidence_limits(number_data_points,data_array,mean,left68,r
 
   End Do
 
-  step_size = step_size*1.d-8
+  step_size = step_size*1.d-9
   
   left68 = mean
 
@@ -968,13 +982,9 @@ subroutine compute_confidence_limits(number_data_points,data_array,mean,left68,r
 
      Do index=1,number_data_points
 
-!        If ((jackknife_dipole_amplitude(index) .le. temp_right) .and. (jackknife_dipole_amplitude(index) .gt. right68)) then
-
         If ((data_array(index) .le. temp_right) .and. (data_array(index) .gt. right68)) then
 
            counter_right = counter_right + 1
-
-!        Else If ((jackknife_dipole_amplitude(index) .ge. temp_left) .and. (jackknife_dipole_amplitude(index) .lt. left68)) then
 
         Else If ((data_array(index) .ge. temp_left) .and. (data_array(index) .lt. left68)) then
 
@@ -1014,15 +1024,10 @@ subroutine compute_confidence_limits(number_data_points,data_array,mean,left68,r
 
            Do index=1,number_data_points
 
-!              If ((jackknife_dipole_amplitude(index) .le. temp_right) .and. &
-!                   (jackknife_dipole_amplitude(index) .gt. right95)) then
-
               If ((data_array(index) .le. temp_right) .and. (data_array(index) .gt. right95)) then
 
                  counter_right = counter_right + 1
 
-!              Else If ((jackknife_dipole_amplitude(index) .ge. temp_left) .and. &
-!                   (jackknife_dipole_amplitude(index) .lt. left95)) then
               Else If ((data_array(index) .ge. temp_left) .and. (data_array(index) .lt. left95)) then
 
                  counter_left = counter_left + 1

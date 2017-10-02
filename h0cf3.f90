@@ -25,7 +25,7 @@ Program h0cf3
     Integer*8 :: i
     Integer*4 :: index_options
     
-    Real*8 :: testdipamp,test1,test2,wtime
+    Real*8 :: current_dipole_amplitude,current_dipole_latitude,current_dipole_longitude,wtime
 
 !######################################
 ! INITIALIZATION OF VARIABLES AND FILES
@@ -136,6 +136,12 @@ Program h0cf3
 
        write(UNIT_EXE_FILE,*) ' '
 
+       open(UNIT_CL_FILE,file=PATH_TO_CONFIDENCE_LIMITS_OUTPUT)
+
+       write(UNIT_CL_FILE,*) '# MEAN RED-SHIFT    AMPLITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95'&
+            'LATITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95    LONGITUDE    MEAN    LEFT68    RIGHT68'&
+            '    LEFT95    RIGHT95'
+
     Else
 
        continue
@@ -148,20 +154,21 @@ Program h0cf3
     Do index_options=1,number_redshift_bins
 
        call compute_number_counts_map(redshift_min,redshift_min+index_options*redshift_step,.false.,&
-            i,testdipamp,test1,test2)
+            i,current_dipole_amplitude,current_dipole_latitude,current_dipole_longitude)
 
        write(UNIT_EXE_FILE,*) 'AMPLITUDE DIPOLE ZMIN ',redshift_min,' ZMAX ',&
-            redshift_min+index_options*redshift_step,' IS ', testdipamp
+            redshift_min+index_options*redshift_step,' IS ', current_dipole_amplitude
 
-       write(UNIT_EXE_FILE,*) 'DIPOLE LATITUDE IS ', test1
+       write(UNIT_EXE_FILE,*) 'DIPOLE LATITUDE IS ', current_dipole_latitude
 
-       write(UNIT_EXE_FILE,*) 'DIPOLE LONGITUDE IS ', test2
+       write(UNIT_EXE_FILE,*) 'DIPOLE LONGITUDE IS ', current_dipole_longitude
 
        write(UNIT_EXE_FILE,*) ' '
 
        If (do_jackknife_analysis) then
 
-          call jackknife_analysis(redshift_min,redshift_min+index_options*redshift_step)
+          call jackknife_analysis(redshift_min,redshift_min+index_options*redshift_step,current_dipole_amplitude,&
+               current_dipole_latitude,current_dipole_longitude)
 
           write(UNIT_EXE_FILE,*) 'JACKKNIFE ANALYSIS IN RED-SHIFT BIN ZMIN ',redshift_min,' ZMAX ',&
                redshift_min+index_options*redshift_step,' ENDED '
@@ -178,6 +185,8 @@ Program h0cf3
     !!$omp End Parallel Do 
 
     write(UNIT_EXE_FILE,*) 'THE ANALYSIS WAS PERFORMED IN ',(omp_get_wtime()-wtime)/3.6d3,' HOURS'
+
+    close(UNIT_CL_FILE)
 
     close(UNIT_EXE_FILE)
 
