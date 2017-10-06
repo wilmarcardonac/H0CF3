@@ -1,3 +1,4 @@
+Makefile
 output/*.txt
 output/*.paramnames
 output/*.ranges
