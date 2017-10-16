@@ -815,6 +815,8 @@ subroutine jackknife_analysis(zmin,zmax,current_amplitude,current_latitude,curre
 
   Integer*8 :: counter_data_points, data_index, index_jackknife_analysis, dimension_jackknife_analysis
 
+  Logical :: flag_dipole, flag_longitude, flag_latitude
+
   write(xmin,'(F5.3)') zmin
   write(xmax,'(F5.3)') zmax
   write(Ns,'(I4.4)') nsmax
@@ -883,58 +885,115 @@ subroutine jackknife_analysis(zmin,zmax,current_amplitude,current_latitude,curre
   close(UNIT_JACKKNIFE_FILE)
 
   call compute_confidence_limits(dimension_jackknife_analysis,jackknife_dipole_amplitude,meana,left68a,right68a,&
-       left95a,right95a)
+       left95a,right95a,flag_dipole)
   
   write(UNIT_EXE_FILE,*) ' '
 
-  write(UNIT_EXE_FILE,*) 'DIPOLE AMPLITUDE: MEAN, 68% CL, AND 95% CL', meana, left68a, right68a, left95a, right95a
+  write(UNIT_EXE_FILE,*) 'DIPOLE:'
+
+  If (flag_dipole) then
+
+     write(UNIT_EXE_FILE,*) 'IN MEAN REDSHIFT ', mean_redshift, 'CL WERE FOUND'
+ 
+     write(UNIT_EXE_FILE,*) 'DIPOLE AMPLITUDE: MEAN, INNER CL, AND OUTER CL', meana, left68a, right68a, left95a, right95a
+
+  Else
+
+!     write(UNIT_EXE_FILE,*) 'IN MEAN REDSHIFT ', mean_redshift, '68% AND 95% WERE NOT FOUND. CHECK EXECUTION FILE'
+ 
+!     write(UNIT_EXE_FILE,*) 'DIPOLE AMPLITUDE: MEAN, X% CL, AND Y% CL', meana, left68a, right68a, left95a, right95a
+
+  End If
 
   call compute_confidence_limits(dimension_jackknife_analysis,jackknife_galactic_latitude,meanla,left68la,right68la,&
-       left95la,right95la)
+       left95la,right95la,flag_latitude)
   
   write(UNIT_EXE_FILE,*) ' '
 
-  write(UNIT_EXE_FILE,*) 'GALACTIC LATITUDE: MEAN, 68% CL, AND 95% CL', meanla, left68la, right68la, left95la, right95la
+  write(UNIT_EXE_FILE,*) 'LATITUDE:'
+
+  If (flag_latitude) then
+
+     write(UNIT_EXE_FILE,*) 'IN MEAN REDSHIFT ', mean_redshift, '68% AND 95% WERE FOUND'
+
+     write(UNIT_EXE_FILE,*) 'GALACTIC LATITUDE: MEAN, INNER CL, AND OUTER CL', meanla, left68la, right68la, left95la, right95la
+
+  Else
+
+!     write(UNIT_EXE_FILE,*) 'IN MEAN REDSHIFT ', mean_redshift, '68% AND 95% WERE NOT FOUND. CHECK EXECUTION FILE'
+
+!     write(UNIT_EXE_FILE,*) 'GALACTIC LATITUDE: MEAN, X% CL, AND Y% CL', meanla, left68la, right68la, left95la, right95la
+
+  End If
 
   call compute_confidence_limits(dimension_jackknife_analysis,jackknife_galactic_longitude,meanlo,left68lo,right68lo,&
-       left95lo,right95lo)
+       left95lo,right95lo,flag_longitude)
   
   write(UNIT_EXE_FILE,*) ' '
 
-  write(UNIT_EXE_FILE,*) 'GALACTIC LONGITUDE: MEAN, 68% CL, AND 95% CL', meanlo, left68lo, right68lo, left95lo, right95lo
+  write(UNIT_EXE_FILE,*) 'LONGITUDE:'
+
+  If (flag_longitude) then
+
+     write(UNIT_EXE_FILE,*) 'IN MEAN REDSHIFT ', mean_redshift, 'CL  WERE FOUND'
+
+     write(UNIT_EXE_FILE,*) 'GALACTIC LONGITUDE: MEAN, INNER CL, AND OUTER CL', meanlo, left68lo, right68lo, left95lo, right95lo
+
+  Else
+
+!     write(UNIT_EXE_FILE,*) 'IN MEAN REDSHIFT ', mean_redshift, '68% AND 95% WERE NOT FOUND. CHECK EXECUTION FILE'
+
+!     write(UNIT_EXE_FILE,*) 'GALACTIC LONGITUDE: MEAN, 68% CL, AND 95% CL', meanlo, left68lo, right68lo, left95lo, right95lo
+
+  End If
 
   write(UNIT_CL_FILE,90) mean_redshift, current_amplitude, meana, left68a, right68a, left95a, right95a, current_latitude, meanla,&
        left68la, right68la, left95la, right95la, current_longitude, meanlo, left68lo, right68lo, left95lo, right95lo
 
 90 Format(19E20.10)
 
-  stop
-! INCLUDE SUBROUTINE 68 AND 95 % HERE
-
   deallocate(jackknife_data_indices,jackknife_dipole_amplitude,jackknife_galactic_longitude,&
        jackknife_galactic_latitude,stat=status1)
 
 end subroutine jackknife_analysis
 
-subroutine compute_confidence_limits(number_data_points,data_array,mean,left68,right68,left95,right95)
+subroutine compute_confidence_limits(number_data_points,data_array,mean,left68,right68,left95,right95,flag_limits)
 
   use fiducial
+  use omp_lib
   use arrays
 
   Implicit none
 
-  Real*8 :: step_size,distance, mean, left68,right68,left95,right95,total95,total68
-  Real*8 :: temp_left,temp_right,limit68,limit95,rightbound,leftbound
-  Real*8,parameter :: error=1.d-1
+  Real*8 :: initial_step_size, mean, left68,right68,left95,right95,total
+  Real*8 :: temp_left,temp_right,limit68,limit95,rightbound,leftbound,wtime,step_size
+  Real*8 :: temp_total
+  Real*8,parameter :: error=5.d-1
+  Real*8,parameter :: number_bins = 1.d2
+  Real*8,parameter :: step_factor_change = 5.d-1
+  Real*8 :: step_size_limit
   Real*8,dimension(number_data_points) :: data_array
   
-  Integer*8 :: number_data_points, data_index, temp_index, index,counter_left,counter_right
+  Integer*8 :: number_data_points, index,counter_left,counter_right,main_index1,main_index2
+  Integer*8,parameter :: index_flag = 1000000000
+
+  Logical :: flag68,flag95,flag_limits
+
+  flag_limits = .false.
+
+  flag68 = .false. 
+
+  flag95 = .false.
 
   rightbound = maxval(data_array)
 
   leftbound = minval(data_array)
 
-  step_size = rightbound - leftbound 
+  initial_step_size = (rightbound - leftbound)/number_bins 
+
+  step_size_limit = initial_step_size/number_bins**2
+
+  step_size = initial_step_size
 
   limit68 = 6.8d-1*number_data_points
 
@@ -942,28 +1001,6 @@ subroutine compute_confidence_limits(number_data_points,data_array,mean,left68,r
 
   mean = sum(data_array)/number_data_points
 
-  Do temp_index=1,number_data_points
-
-     Do data_index=1,number_data_points
-
-        If (data_index .gt. temp_index) then
-
-           distance = abs(data_array(temp_index) - data_array(data_index))
-
-           If ((distance .lt. step_size) .and. (distance .gt. 0.d0)) then
-
-              step_size = distance
-
-           End If
-
-        End If
-
-     End Do
-
-  End Do
-
-  step_size = step_size*1.d-9
-  
   left68 = mean
 
   right68 = mean
@@ -972,9 +1009,13 @@ subroutine compute_confidence_limits(number_data_points,data_array,mean,left68,r
 
   temp_right = mean + step_size
 
-  total68 = 0
+  total = 0
 
-  Do 
+  temp_total = 0
+
+  wtime = omp_get_wtime() ! SETTING STARTING TIME
+
+  Do main_index1=1,index_flag
 
      counter_left = 0
 
@@ -994,207 +1035,259 @@ subroutine compute_confidence_limits(number_data_points,data_array,mean,left68,r
 
      End Do
 
-     total68 = counter_left + counter_right + total68 
+     temp_total = counter_left + counter_right + total
 
-     If (abs(total68 - limit68) .le. error) then
- 
-        write(UNIT_EXE_FILE,*) ' '
+     If ( (abs(temp_total - limit68) .le. error) .or. ( (step_size .le. step_size_limit) ) ) then
+        
+        flag68 = .true. 
 
-        write(UNIT_EXE_FILE,*) '68% LIMITS WERE FOUND' 
+        total = temp_total
 
         left68 = temp_left
 
         right68 = temp_right
-        
-        total95 = total68
 
-        left95 = left68
+        write(UNIT_EXE_FILE,*) ' '
 
-        right95 = right68
+        If ( abs(temp_total - limit68) .le. error ) then
 
-        temp_left = left95 - step_size
+           write(UNIT_EXE_FILE,*) '68% LIMITS WERE FOUND. LEFT ', left68,' RIGHT ', right68
 
-        temp_right = right95 + step_size
+        Else
 
-        Do 
+           write(UNIT_EXE_FILE,*) total/number_data_points*1.d2,'% LIMITS WERE FOUND. LEFT ', left68,' RIGHT ', right68
+           
+        End If
 
-           counter_left = 0
+        print *, 'LEAVING 68% LOOP...'
 
-           counter_right = 0
+        exit 
 
-           Do index=1,number_data_points
+     Else
 
-              If ((data_array(index) .le. temp_right) .and. (data_array(index) .gt. right95)) then
+        If (temp_total .lt. limit68) then
 
-                 counter_right = counter_right + 1
+           total = temp_total
 
-              Else If ((data_array(index) .ge. temp_left) .and. (data_array(index) .lt. left95)) then
+           left68 = temp_left
 
-                 counter_left = counter_left + 1
+           right68 = temp_right
 
-              End If
+           temp_left = temp_left - step_size
 
-           End Do
+           temp_right = temp_right + step_size
 
-           total95 = counter_left + counter_right + total95 
+           If (temp_left .lt. leftbound) then
 
-           If (abs(total95 - limit95) .le. error) then
+              temp_left = leftbound
 
-              write(UNIT_EXE_FILE,*) ' '
+           End If
+           
+           If (temp_right .gt. rightbound) then
 
-              write(UNIT_EXE_FILE,*) '95% LIMITS WERE FOUND' 
-
-              left95 = temp_left
-
-              right95 = temp_right
-
-              exit
-
-           Else
-
-              If (counter_right .gt. 0) then
-
-                 right95 = temp_right 
-
-                 temp_right = temp_right + step_size
-
-                 If (temp_right .gt. rightbound) then
-
-                    write(UNIT_EXE_FILE,*) ' '
-
-                    write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
-
-                    write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
-
-                    stop
-
-                 End If
-
-              Else
-
-                 temp_right = temp_right + step_size
-
-                 If (temp_right .gt. rightbound) then
-
-                    write(UNIT_EXE_FILE,*) ' '
-
-                    write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
-
-                    write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
-
-                    stop
-
-                 End If
-
-              End If
-
-              If (counter_left .gt. 0) then
-
-                 left95 = temp_left
-
-                 temp_left = temp_left - step_size
-
-                 If (temp_left .lt. leftbound) then
-
-                    write(UNIT_EXE_FILE,*) ' '
-
-                    write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
-
-                    write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
-
-                    stop
-
-                 End If
-
-              Else
-
-                 temp_left = temp_left - step_size
-
-                 If (temp_left .lt. leftbound) then
-
-                    write(UNIT_EXE_FILE,*) ' '
-
-                    write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
-
-                    write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
-
-                    stop
-
-                 End If
-
-              End If
+              temp_right = rightbound
 
            End If
 
-        End Do
+        Else
+
+           If ( (counter_left .ne. 0) .and. (counter_right .ne. 0) ) then
+
+              leftbound = temp_left
+
+              rightbound = temp_right
+
+              temp_left = temp_left + step_size
+
+              temp_right = temp_right - step_size
+
+              step_size = step_size*step_factor_change
+
+              temp_left = temp_left - step_size
+
+              temp_right = temp_right + step_size
+
+           Else If ( (counter_left .eq. 0) .and. (counter_right .ne. 0) ) then
+
+              rightbound = temp_right
+
+              temp_right = temp_right - step_size
+
+              step_size = step_size*step_factor_change
+
+              temp_right = temp_right + step_size
+
+           Else If ( (counter_left .ne. 0) .and. (counter_right .eq. 0) ) then
+
+              leftbound = temp_left
+
+              temp_left = temp_left + step_size
+
+              step_size = step_size*step_factor_change
+
+              temp_left = temp_left - step_size
+
+           Else If  ( (counter_left .eq. 0) .and. (counter_right .eq. 0) ) then
+
+              write(UNIT_EXE_FILE,*) ' '
+                      
+              write(UNIT_EXE_FILE,*) 'SOMETHING IS WRONG WITH SUBROUTINE compute_confidence_limits'
+
+              write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
+
+              stop
+     
+           End If
+           
+        End If
+
+     End If
+
+  End Do
+
+  step_size = initial_step_size
+
+  rightbound = maxval(data_array)
+
+  leftbound = minval(data_array)
+
+  left95 = left68
+
+  right95 = right68
+
+  temp_left = left95 - step_size
+
+  temp_right = right95 + step_size
+
+  If (temp_left .lt. leftbound) then
+
+     temp_left = leftbound
+
+  End If
+
+  If (temp_right .gt. rightbound) then
+
+     temp_right = rightbound
+
+  End If
+
+  Do main_index2=1,index_flag
+
+     counter_left = 0
+
+     counter_right = 0
+
+     Do index=1,number_data_points
+
+        If ((data_array(index) .le. temp_right) .and. (data_array(index) .gt. right95)) then
+
+           counter_right = counter_right + 1
+
+        Else If ((data_array(index) .ge. temp_left) .and. (data_array(index) .lt. left95)) then
+
+           counter_left = counter_left + 1
+
+        End If
+
+     End Do
+
+     temp_total = counter_left + counter_right + total 
+
+     If ( (abs(temp_total - limit95) .le. error) .or. ( (step_size .le. step_size_limit) ) ) then
+
+        flag95 = .true. 
+
+        total = temp_total
+
+        left95 = temp_left
+
+        right95 = temp_right
+
+        write(UNIT_EXE_FILE,*) ' '
+
+        If ( abs(temp_total - limit95) .le. error ) then
+
+           write(UNIT_EXE_FILE,*) '95% LIMITS WERE FOUND. LEFT ', left95,' RIGHT ', right95
+
+        Else
+
+           write(UNIT_EXE_FILE,*) total/number_data_points*1.d2,'% LIMITS WERE FOUND. LEFT ', left95,' RIGHT ', right95
+           
+        End If
+
+        print *, 'LEAVING 95% LOOP...'
 
         exit
 
      Else
 
-        If (counter_right .gt. 0) then
+        If (temp_total .lt. limit95) then
 
-           right68 = temp_right 
+           total = temp_total
+
+           left95 = temp_left
+
+           right95 = temp_right 
+
+           temp_left = temp_left - step_size
 
            temp_right = temp_right + step_size
 
+           If (temp_left .lt. leftbound) then
+
+              temp_left = leftbound
+
+           End If
+
            If (temp_right .gt. rightbound) then
 
-              write(UNIT_EXE_FILE,*) ' '
-
-              write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
-
-              write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
-
-              stop
+              temp_right = rightbound
 
            End If
 
         Else
 
-           temp_right = temp_right + step_size
+           If ( (counter_left .ne. 0) .and. (counter_right .ne. 0) ) then
 
-           If (temp_right .gt. rightbound) then
+              leftbound = temp_left
 
-              write(UNIT_EXE_FILE,*) ' '
+              rightbound = temp_right
 
-              write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
+              temp_left = temp_left + step_size
 
-              write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
+              temp_right = temp_right - step_size
 
-              stop
+              step_size = step_size*step_factor_change
 
-           End If
+              temp_left = temp_left - step_size
 
-        End If
+              temp_right = temp_right + step_size
 
-        If (counter_left .gt. 0) then
+           Else If ( (counter_left .eq. 0) .and. (counter_right .ne. 0) ) then
 
-           left68 = temp_left
+              rightbound = temp_right
 
-           temp_left = temp_left - step_size
+              temp_right = temp_right - step_size
 
-           If (temp_left .lt. leftbound) then
+              step_size = step_size*step_factor_change
 
-              write(UNIT_EXE_FILE,*) ' '
+              temp_right = temp_right + step_size
 
-              write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
+           Else If ( (counter_left .ne. 0) .and. (counter_right .eq. 0) ) then
 
-              write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
+              leftbound = temp_left
 
-              stop
+              temp_left = temp_left + step_size
 
-           End If
+              step_size = step_size*step_factor_change
 
-        Else
+              temp_left = temp_left - step_size
 
-           temp_left = temp_left - step_size
-
-           If (temp_left .lt. leftbound) then
+           Else If  ( (counter_left .eq. 0) .and. (counter_right .eq. 0) ) then
 
               write(UNIT_EXE_FILE,*) ' '
 
-              write(UNIT_EXE_FILE,*) 'POSSIBLY "step_size" NEEDS TO BE REDUCED IN SUBROUTINE "compute_confidence_limits" '
+              write(UNIT_EXE_FILE,*) 'SOMETHING IS WRONG WITH SUBROUTINE compute_confidence_limits'
 
               write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
 
@@ -1207,6 +1300,26 @@ subroutine compute_confidence_limits(number_data_points,data_array,mean,left68,r
      End If
 
   End Do
+
+  If (flag68 .and. flag95) then
+
+     flag_limits = .true.
+
+     write(UNIT_EXE_FILE,*) ' '
+
+!     write(UNIT_EXE_FILE,*) '68% AND 95% LIMITS WERE SUCCESFULLY FOUND'
+              
+  Else
+
+     write(UNIT_EXE_FILE,*) ' '
+
+     write(UNIT_EXE_FILE,*) '68% AND 95% LIMITS WERE NOT FOUND. MORE ITERATIONS ARE NEEDED'
+
+     write(UNIT_EXE_FILE,*) 'PROGRAM STOPED '
+
+     stop
+
+  End If
 
 end subroutine compute_confidence_limits
 

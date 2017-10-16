@@ -56,6 +56,10 @@ Program h0cf3
 
     write(UNIT_EXE_FILE,*) ' '
 
+    write(UNIT_EXE_FILE,*) 'DIVIDING THE CATALOGUE IN ', number_redshift_bins,' RED-SHIFT BINS'
+
+    write(UNIT_EXE_FILE,*) ' '
+
     write(UNIT_EXE_FILE,*) 'N_side = ', nsmax, ' IN THE CURRENT ANALYSIS; THIS CORRESPONDS TO A NUMBER '
     write(UNIT_EXE_FILE,*) 'OF PIXELS IN THE NUMBER COUNTS MAPS EQUAL TO ', npixC
 
@@ -138,9 +142,9 @@ Program h0cf3
 
        open(UNIT_CL_FILE,file=PATH_TO_CONFIDENCE_LIMITS_OUTPUT)
 
-       write(UNIT_CL_FILE,*) '# MEAN RED-SHIFT    AMPLITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95'&
-            'LATITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95    LONGITUDE    MEAN    LEFT68    RIGHT68'&
-            '    LEFT95    RIGHT95'
+       write(UNIT_CL_FILE,*) '# MEAN RED-SHIFT    AMPLITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95'//trim('    ')//&
+            '    LATITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95    LONGITUDE    MEAN    LEFT68'//trim('    ')//&
+            '    RIGHT68    LEFT95    RIGHT95'
 
     Else
 
@@ -155,6 +159,8 @@ Program h0cf3
 
        call compute_number_counts_map(redshift_min,redshift_min+index_options*redshift_step,.false.,&
             i,current_dipole_amplitude,current_dipole_latitude,current_dipole_longitude)
+
+       write(UNIT_EXE_FILE,*) '********** RED-SHIFT BIN ', index_options, '**********'
 
        write(UNIT_EXE_FILE,*) 'AMPLITUDE DIPOLE ZMIN ',redshift_min,' ZMAX ',&
             redshift_min+index_options*redshift_step,' IS ', current_dipole_amplitude
@@ -183,6 +189,8 @@ Program h0cf3
        
     End Do
     !!$omp End Parallel Do 
+
+    call system('python scripts/plot_results_jackknife_analysis.py')
 
     write(UNIT_EXE_FILE,*) 'THE ANALYSIS WAS PERFORMED IN ',(omp_get_wtime()-wtime)/3.6d3,' HOURS'
 
