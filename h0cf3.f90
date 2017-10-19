@@ -26,6 +26,7 @@ Program h0cf3
     Integer*4 :: index_options
     
     Real*8 :: current_dipole_amplitude,current_dipole_latitude,current_dipole_longitude,wtime
+    Real*8 :: noise_dipole_amplitude, noise_dipole_latitude, noise_dipole_longitude
 
 !######################################
 ! INITIALIZATION OF VARIABLES AND FILES
@@ -39,24 +40,38 @@ Program h0cf3
 
     call read_data_CF3(PATH_TO_COSMICFLOWS_DATA)
 
+    call read_data_JLA(PATH_TO_JLA_DATA)
+
     write(UNIT_EXE_FILE,*) 'THIS PROJECT AIMS AT STUDYING THE DISCREPANCY BETWEEN LOCAL AND GLOBAL MEASUREMENTS '
     write(UNIT_EXE_FILE,*) 'OF THE HUBBLE EXPANSION RATE'
 
     write(UNIT_EXE_FILE,*) ' '
 
-    write(UNIT_EXE_FILE,*) 'DATA FROM THE COSMICFLOWS-3 COMPILATION SUCCESFULLY READ '
+    write(UNIT_EXE_FILE,*) 'DATA FROM BOTH THE COSMICFLOWS-3 COMPILATION AND JLA DATA SET SUCCESFULLY READ '
 
     write(UNIT_EXE_FILE,*) ' '
 
-    write(UNIT_EXE_FILE,*) 'MINIMUM REDSHIFT IN THE CATALOGUE IS: ', minval(redshift)
+    write(UNIT_EXE_FILE,*) 'MINIMUM RED-SHIFT IN THE JLA DATA SET IS: ', minval(redshift_jla)
 
     write(UNIT_EXE_FILE,*) ' '
 
-    write(UNIT_EXE_FILE,*) 'MAXIMUM REDSHIFT IN THE CATALOGUE IS: ', maxval(redshift) 
+    write(UNIT_EXE_FILE,*) 'MAXIMUM RED-SHIFT IN THE JLA DATA SET IS: ', maxval(redshift_jla) 
 
     write(UNIT_EXE_FILE,*) ' '
 
-    write(UNIT_EXE_FILE,*) 'DIVIDING THE CATALOGUE IN ', number_redshift_bins,' RED-SHIFT BINS'
+    write(UNIT_EXE_FILE,*) 'MINIMUM RED-SHIFT IN THE CF3 CATALOGUE IS: ', minval(redshift)
+
+    write(UNIT_EXE_FILE,*) ' '
+
+    write(UNIT_EXE_FILE,*) 'MAXIMUM RED-SHIFT IN THE CF3 CATALOGUE IS: ', maxval(redshift) 
+
+    write(UNIT_EXE_FILE,*) ' '
+
+    write(UNIT_EXE_FILE,*) 'DIVIDING THE CF3 CATALOGUE IN ', number_redshift_bins,' RED-SHIFT BINS'
+
+    write(UNIT_EXE_FILE,*) ' '
+
+    write(UNIT_EXE_FILE,*) 'STARTING FROM RED-SHIFT ', redshift_min, 'UP TO RED-SHIFT ', redshift_max
 
     write(UNIT_EXE_FILE,*) ' '
 
@@ -64,6 +79,8 @@ Program h0cf3
     write(UNIT_EXE_FILE,*) 'OF PIXELS IN THE NUMBER COUNTS MAPS EQUAL TO ', npixC
 
     write(UNIT_EXE_FILE,*) ' '
+
+    stop
 
 !###########################
 ! TESTING CODE (IF REQUIRED)
@@ -144,7 +161,7 @@ Program h0cf3
 
        write(UNIT_CL_FILE,*) '# MEAN RED-SHIFT    AMPLITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95'//trim('    ')//&
             '    LATITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95    LONGITUDE    MEAN    LEFT68'//trim('    ')//&
-            '    RIGHT68    LEFT95    RIGHT95'
+            '    RIGHT68    LEFT95    RIGHT95    NOISE_AMPLITUDE    NOISE_LATITUDE    NOISE_LONGITUDE'
 
     Else
 
@@ -158,7 +175,8 @@ Program h0cf3
     Do index_options=1,number_redshift_bins
 
        call compute_number_counts_map(redshift_min,redshift_min+index_options*redshift_step,.false.,&
-            i,current_dipole_amplitude,current_dipole_latitude,current_dipole_longitude)
+            i,current_dipole_amplitude,current_dipole_latitude,current_dipole_longitude,&
+            noise_dipole_amplitude, noise_dipole_latitude, noise_dipole_longitude)
 
        write(UNIT_EXE_FILE,*) '********** RED-SHIFT BIN ', index_options, '**********'
 
@@ -174,7 +192,8 @@ Program h0cf3
        If (do_jackknife_analysis) then
 
           call jackknife_analysis(redshift_min,redshift_min+index_options*redshift_step,current_dipole_amplitude,&
-               current_dipole_latitude,current_dipole_longitude)
+               current_dipole_latitude,current_dipole_longitude,&
+               noise_dipole_amplitude, noise_dipole_latitude, noise_dipole_longitude)
 
           write(UNIT_EXE_FILE,*) 'JACKKNIFE ANALYSIS IN RED-SHIFT BIN ZMIN ',redshift_min,' ZMAX ',&
                redshift_min+index_options*redshift_step,' ENDED '

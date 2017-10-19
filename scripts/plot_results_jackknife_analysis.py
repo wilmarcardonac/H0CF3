@@ -5,7 +5,7 @@ import matplotlib.pyplot as py
 
 marker = ['bo','rs','go','bv','r^','g<','b>','rD','g+','bx','r*','bo']
 
-z_mean, A, A_mean, AL68, AR68, AL95, AR95, LA, LA_mean, LAL68, LAR68, LAL95, LAR95, LO, LO_mean, LOL68, LOR68, LOL95, LOR95 = np.loadtxt('./output/confidence_limits.txt',unpack=True)
+z_mean, A, A_mean, AL68, AR68, AL95, AR95, LA, LA_mean, LAL68, LAR68, LAL95, LAR95, LO, LO_mean, LOL68, LOR68, LOL95, LOR95, A_noise, LA_noise, LO_noise = np.loadtxt('./output/confidence_limits.txt',unpack=True)
 
 # DIPOLE AMPLITUDE
 
@@ -15,6 +15,7 @@ yerrV = np.zeros(2)
 for index in range(len(z_mean)):
 
     py.errorbar(z_mean[index],A[index],yerr=[[A_mean[index]-AL68[index]],[AR68[index] - A_mean[index]]],xerr=None,ecolor='blue',mfc='blue',fmt='',ls='None',label='Dipole Amplitude',elinewidth=3,ms=10)
+    py.plot(z_mean[index],A_noise[index],color='blue',marker='*')
 
 #py.xlim(65.,83.)
 #py.ylim(-2.,83.)
@@ -37,7 +38,7 @@ yerrV = np.zeros(2)
 for index in range(len(z_mean)):
 
     py.errorbar(z_mean[index],LA[index],yerr=[[LA_mean[index]-LAL68[index]],[LAR68[index] - LA_mean[index]]],xerr=None,ecolor='blue',mfc='blue',fmt='',ls='None',label='Dipole Longitude',elinewidth=3,ms=10)
-
+    py.plot(z_mean[index],LA_noise[index],color='blue',marker='*')
 #py.xlim(65.,83.)
 #py.ylim(-2.,83.)
 py.xlabel(r'$\bar{z}$', fontsize=18)
@@ -59,7 +60,7 @@ yerrV = np.zeros(2)
 for index in range(len(z_mean)):
 
     py.errorbar(z_mean[index],LO[index],yerr=[[LO_mean[index]-LOL68[index]],[LOR68[index] - LO_mean[index]]],xerr=None,ecolor='blue',mfc='blue',fmt='',ls='None',label='Dipole Latitude',elinewidth=3,ms=10)
-
+    py.plot(z_mean[index],LO_noise[index],color='blue',marker='*')
 #py.xlim(65.,83.)
 #py.ylim(-2.,83.)
 py.xlabel(r'$\bar{z}$', fontsize=18)

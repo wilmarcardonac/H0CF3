@@ -15,7 +15,7 @@ Module fiducial
   Real*8, parameter :: redshift_max = 5.d-2 ! SET HIGHEST REDSHIFT FOR ANALYSIS 
   Real*8, parameter :: redshift_step = 5.d-3 ! SET STEP IN REDSHIFT FOR ANALYSIS  
 
-  Integer(kind=I4B),parameter :: nsmax = 16  ! Nside FOR NUMBER COUNTS MAP: 2**M=1,2,4,8
+  Integer(kind=I4B),parameter :: nsmax = 1  ! Nside FOR NUMBER COUNTS MAP: 2**M=1,2,4,8
   Integer*4,parameter :: nlmax = 2*nsmax    ! HIGHEST MULTIPOLE
   Integer*4,parameter :: UNIT_EXE_FILE = 90           ! UNIT NUMBER FOR EXECUTION INFORMATION FILE
   Integer*4,parameter :: UNIT_JACKKNIFE_FILE = 91     ! UNIT NUMBER FOR JACKKNIFE ANALYSIS FILE 
@@ -39,6 +39,7 @@ Module fiducial
   !################################
 
   Integer*8 :: number_galaxies_in_CF3  ! NUMBER OF GALAXIES IN CF3 DATA SET
+  Integer*8 :: number_supernovae_in_JLA  ! NUMBER OF SUPERNOVAE IN JLA DATA SET
 
   Logical,parameter   :: do_galaxy_distribution_plots = .false. ! DO PLOTS OF ANGULAR DISTRIBUTION OF GALAXIES IF SET IT TRUE
   Logical,parameter   :: do_jackknife_analysis = .true.        ! DO JACKKNIFE ANALYSIS IF SET IT TRUE
@@ -54,6 +55,7 @@ Module fiducial
   Character(len=*),parameter :: EXECUTION_INFORMATION = './output/execution_information.txt' ! PATH TO EXECUTION INFORMATION FILE
   character(len=*),parameter :: fmt = '(I4.4)'  ! FORMAT NUMBERS 1 - 1000
   Character(len=*),parameter :: PATH_TO_COSMICFLOWS_DATA = './data/cosmic_flows_data.txt' ! COSMICFLOWS DATA REDSHIFT, DISTANCE, GALACTIC LONGITUDE AND LATITUDE
+  Character(len=*),parameter :: PATH_TO_JLA_DATA = './data/jla_data.txt' ! COSMICFLOWS DATA REDSHIFT, GALACTIC LONGITUDE AND LATITUDE
   Character(len=*),parameter :: PATH_TO_FULL_COSMICFLOWS_DATA = './data/CF-3.txt' ! FULL COSMICFLOWS 3 DATA SET
   Character(len=*),parameter :: PATH_TO_CONFIDENCE_LIMITS_OUTPUT = './output/confidence_limits.txt' ! PATH TO OUTPUT FROM JACKKNIFE ANALYSIS (CL) 
 !  Character(len=*),parameter :: PATH_TO_VSK_MASK = './vsk_maps/vsk_mask.fits' ! VSK MASK TO BE USED (RING ORDERING)

@@ -74,6 +74,60 @@ subroutine read_data_CF3(path_to_datafile)
 
 end subroutine read_data_CF3
 
+subroutine read_data_JLA(path_to_datafile)
+
+  use arrays
+  use fiducial
+
+  Implicit none
+
+  Integer*4 :: arrays_dimension,p
+  Integer :: stat
+  character(len=*) :: path_to_datafile
+
+  open(11,file=path_to_datafile)
+
+  read(11,*)
+
+  arrays_dimension = 0
+
+  Do 
+
+     read(11,*,iostat=stat)
+
+     If (stat .ne. 0) then
+
+        exit
+
+     Else
+
+        arrays_dimension = arrays_dimension + 1 
+
+     End If
+
+  End Do
+
+  close(11)
+
+  number_supernovae_in_JLA = arrays_dimension
+
+  allocate (redshift_jla(1:arrays_dimension),galactic_longitude_jla(1:arrays_dimension),&
+       galactic_latitude_jla(1:arrays_dimension),stat=status1)
+
+  open(11,file=path_to_datafile)
+
+  read(11,*)
+
+  Do p=1,arrays_dimension
+
+     read(11,*) redshift_jla(p),galactic_longitude_jla(p),galactic_latitude_jla(p)
+
+  End Do
+
+  close(11)
+
+end subroutine read_data_JLA
+
 subroutine write_python_script_angular_distribution_galaxies(option)
     
     use fiducial
@@ -501,7 +555,8 @@ subroutine write_mpi_file(name_python_file,option)
 
 end subroutine write_mpi_file
 
-subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip_amplitude,dip_latitude,dip_longitude)
+subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip_amplitude,dip_latitude,dip_longitude,&
+     noise_dip_amplitude,noise_dip_latitude,noise_dip_longitude)
 
   use healpix_types
   use udgrade_nr, only: udgrade_ring, udgrade_nest
@@ -518,9 +573,10 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
   Character(len=5) :: xmin,xmax
 
   Real*8 :: zmin,zmax,mean_nc,dip_amplitude,dip_latitude,dip_longitude
-  Real(kind=DP),dimension(0:DEGREE_REMOVE_DIPOLE*DEGREE_REMOVE_DIPOLE-1) :: multipoles ! SAVES MONOPOLE AND DIPOLE OF CMB MAP 
-  Real(kind=DP),dimension(1:2) :: zbounds ! BOUNDS TO COMPUTE DIPOLE AND MONOPOLE
-  Real(kind=DP) :: theta,phi ! COLATITUDE AND LONGITUDE
+  Real*8 :: noise_dip_amplitude,noise_dip_latitude,noise_dip_longitude
+  Real(kind=DP),dimension(0:DEGREE_REMOVE_DIPOLE*DEGREE_REMOVE_DIPOLE-1) :: multipoles, multipoles_noise ! SAVES MONOPOLE AND DIPOLE OF CMB MAP 
+  Real(kind=DP),dimension(1:2) :: zbounds,zbounds_noise ! BOUNDS TO COMPUTE DIPOLE AND MONOPOLE
+  Real(kind=DP) :: theta,phi,theta_noise,phi_noise ! COLATITUDE AND LONGITUDE
 
   Integer*8 :: data_index, index_i,data_index_excluded
   Integer(kind=I8B) :: ipring ! NUMBERS PIXELS IN NUMBER COUNTS MAP
@@ -529,6 +585,7 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
   Logical :: exist
 
   zbounds(:) = 0.d0
+  zbounds_noise(:) = 0.d0
 
   If (jackknife) then
 
@@ -738,6 +795,17 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
 
   dip_latitude = (HALFPI - theta)*RAD2DEG
 
+  call remove_dipole(nsmax,shot_noise(0:npixC-1,1),RING_ORDERING,DEGREE_REMOVE_DIPOLE,multipoles_noise,&
+  zbounds_noise,HPX_DBADVAL,mask(0:npixC-1,1))
+
+  noise_dip_amplitude = sqrt(multipoles_noise(1)**2 + multipoles_noise(2)**2 + multipoles_noise(3)**2)
+
+  call vec2ang(multipoles_noise(1:3),theta_noise,phi_noise)
+
+  noise_dip_longitude = phi_noise*RAD2DEG
+
+  noise_dip_latitude = (HALFPI - theta_noise)*RAD2DEG
+
   deallocate (map, shot_noise, mask, map_nc, stat = status1)
 
 end subroutine compute_number_counts_map
@@ -792,7 +860,8 @@ subroutine test_remove_dipole()
 end subroutine test_remove_dipole
 
 
-subroutine jackknife_analysis(zmin,zmax,current_amplitude,current_latitude,current_longitude)
+subroutine jackknife_analysis(zmin,zmax,current_amplitude,current_latitude,current_longitude,&
+     noise_amplitude,noise_latitude,noise_longitude)
 
 !  use healpix_types
 !  use udgrade_nr, only: udgrade_ring, udgrade_nest
@@ -812,6 +881,7 @@ subroutine jackknife_analysis(zmin,zmax,current_amplitude,current_latitude,curre
   Real*8 :: meanla, left68la,right68la,left95la,right95la
   Real*8 :: meanlo, left68lo,right68lo,left95lo,right95lo
   Real*8 :: current_amplitude,current_latitude,current_longitude
+  Real*8 :: noise_amplitude,noise_latitude,noise_longitude
 
   Integer*8 :: counter_data_points, data_index, index_jackknife_analysis, dimension_jackknife_analysis
 
@@ -840,7 +910,9 @@ subroutine jackknife_analysis(zmin,zmax,current_amplitude,current_latitude,curre
   mean_redshift = mean_redshift/counter_data_points
 
   allocate (jackknife_data_indices(1:counter_data_points),jackknife_dipole_amplitude(1:counter_data_points),&
-       jackknife_galactic_longitude(1:counter_data_points),jackknife_galactic_latitude(1:counter_data_points),stat=status1)
+       jackknife_galactic_longitude(1:counter_data_points),jackknife_galactic_latitude(1:counter_data_points),&
+       jack_noise_dipole_amplitude(1:counter_data_points),jack_noise_galactic_longitude(1:counter_data_points),&
+       jack_noise_galactic_latitude(1:counter_data_points),stat=status1)
 
   dimension_jackknife_analysis = counter_data_points
 
@@ -866,7 +938,8 @@ subroutine jackknife_analysis(zmin,zmax,current_amplitude,current_latitude,curre
 
      call compute_number_counts_map(zmin,zmax,.true.,jackknife_data_indices(index_jackknife_analysis),&
           jackknife_dipole_amplitude(index_jackknife_analysis),jackknife_galactic_latitude(index_jackknife_analysis),&
-          jackknife_galactic_longitude(index_jackknife_analysis))
+          jackknife_galactic_longitude(index_jackknife_analysis),jack_noise_dipole_amplitude(index_jackknife_analysis),&
+          jack_noise_galactic_latitude(index_jackknife_analysis),jack_noise_galactic_longitude(index_jackknife_analysis))
 
   End Do
 
@@ -948,12 +1021,14 @@ subroutine jackknife_analysis(zmin,zmax,current_amplitude,current_latitude,curre
   End If
 
   write(UNIT_CL_FILE,90) mean_redshift, current_amplitude, meana, left68a, right68a, left95a, right95a, current_latitude, meanla,&
-       left68la, right68la, left95la, right95la, current_longitude, meanlo, left68lo, right68lo, left95lo, right95lo
+       left68la, right68la, left95la, right95la, current_longitude, meanlo, left68lo, right68lo, left95lo, right95lo,&
+       noise_amplitude,noise_latitude,noise_longitude
 
-90 Format(19E20.10)
+90 Format(22E20.10)
 
   deallocate(jackknife_data_indices,jackknife_dipole_amplitude,jackknife_galactic_longitude,&
-       jackknife_galactic_latitude,stat=status1)
+       jackknife_galactic_latitude,jack_noise_dipole_amplitude, jack_noise_galactic_longitude,&
+       jack_noise_galactic_latitude, stat=status1)
 
 end subroutine jackknife_analysis
 
