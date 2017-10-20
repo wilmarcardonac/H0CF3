@@ -14,6 +14,8 @@ Module fiducial
   Real*8, parameter :: redshift_min = 1.d-2 ! SET LOWEST REDSHIFT FOR ANALYSIS 
   Real*8, parameter :: redshift_max = 5.d-2 ! SET HIGHEST REDSHIFT FOR ANALYSIS 
   Real*8, parameter :: redshift_step = 5.d-3 ! SET STEP IN REDSHIFT FOR ANALYSIS  
+  Real*8, parameter :: redshift_min_jla = 1.d-2 ! SET LOWEST REDSHIFT FOR ANALYSIS 
+  Real*8, parameter :: redshift_max_jla = 5.d-2 ! SET HIGHEST REDSHIFT FOR ANALYSIS 
 
   Integer(kind=I4B),parameter :: nsmax = 1  ! Nside FOR NUMBER COUNTS MAP: 2**M=1,2,4,8
   Integer*4,parameter :: nlmax = 2*nsmax    ! HIGHEST MULTIPOLE
@@ -38,10 +40,11 @@ Module fiducial
   ! SPECIFICATIONS FOR THE ANALYSIS
   !################################
 
-  Integer*8 :: number_galaxies_in_CF3  ! NUMBER OF GALAXIES IN CF3 DATA SET
-  Integer*8 :: number_supernovae_in_JLA  ! NUMBER OF SUPERNOVAE IN JLA DATA SET
+  Integer*4 :: number_galaxies_in_CF3  ! NUMBER OF GALAXIES IN CF3 DATA SET
+  Integer*4 :: number_supernovae_in_JLA  ! NUMBER OF SUPERNOVAE IN JLA DATA SET
 
   Logical,parameter   :: do_galaxy_distribution_plots = .false. ! DO PLOTS OF ANGULAR DISTRIBUTION OF GALAXIES IF SET IT TRUE
+  Logical,parameter   :: do_supernovae_distribution_plots = .true. ! DO PLOTS OF ANGULAR DISTRIBUTION OF SUPERNOVAE IF SET IT TRUE
   Logical,parameter   :: do_jackknife_analysis = .true.        ! DO JACKKNIFE ANALYSIS IF SET IT TRUE
   Logical,parameter   :: do_tests = .false.   ! TEST THE CODE IF SET IT TRUE 
 

@@ -11,5 +11,6 @@ output/*.py_mcsamples
 analyzer/*~
 analyzer/*.txt
 analyzer/*.pdf
-data/*~
+data/*.txt
+data/jla_likelihood_v6.tgz
 *~

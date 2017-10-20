@@ -23,7 +23,7 @@ Program h0cf3
     Implicit none
 
     Integer*8 :: i
-    Integer*4 :: index_options
+    Integer*4 :: index_options,counter
     
     Real*8 :: current_dipole_amplitude,current_dipole_latitude,current_dipole_longitude,wtime
     Real*8 :: noise_dipole_amplitude, noise_dipole_latitude, noise_dipole_longitude
@@ -47,7 +47,7 @@ Program h0cf3
 
     write(UNIT_EXE_FILE,*) ' '
 
-    write(UNIT_EXE_FILE,*) 'DATA FROM BOTH THE COSMICFLOWS-3 COMPILATION AND JLA DATA SET SUCCESFULLY READ '
+    write(UNIT_EXE_FILE,*) 'DATA FROM THE JLA DATA SET SUCCESFULLY READ '
 
     write(UNIT_EXE_FILE,*) ' '
 
@@ -59,6 +59,36 @@ Program h0cf3
 
     write(UNIT_EXE_FILE,*) ' '
 
+    write(UNIT_EXE_FILE,*) 'THERE ARE ', number_supernovae_in_JLA, 'SUPERNOVAE IN THE JLA DATA SET'
+
+    counter = 0 
+
+    Do index_options=1,number_supernovae_in_JLA
+
+       If ( (redshift_jla(index_options) .ge. redshift_min_jla) .and. (redshift_jla(index_options) &
+            .le. redshift_max_jla) ) then
+
+          counter = counter + 1
+          
+       Else
+
+          continue
+
+       End If
+
+    End Do
+    
+    write(UNIT_EXE_FILE,*) ''
+
+    write(UNIT_EXE_FILE,*) 'AND THE CURRENT ANALYSIS USES ', counter, 'SUPERNOVAE, THAT IS, ',&
+         real(counter)/real(number_supernovae_in_JLA)*1.d2,'% OF THE AVAILABLE DATA SET'
+
+    write(UNIT_EXE_FILE,*) ''
+
+    write(UNIT_EXE_FILE,*) 'DATA FROM THE COSMICFLOWS-3 COMPILATION SUCCESFULLY READ '
+
+    write(UNIT_EXE_FILE,*) ' '
+
     write(UNIT_EXE_FILE,*) 'MINIMUM RED-SHIFT IN THE CF3 CATALOGUE IS: ', minval(redshift)
 
     write(UNIT_EXE_FILE,*) ' '
@@ -66,6 +96,31 @@ Program h0cf3
     write(UNIT_EXE_FILE,*) 'MAXIMUM RED-SHIFT IN THE CF3 CATALOGUE IS: ', maxval(redshift) 
 
     write(UNIT_EXE_FILE,*) ' '
+
+    write(UNIT_EXE_FILE,*) 'THERE ARE ', number_galaxies_in_CF3, 'GALAXIES IN THE CF3 DATA SET'
+
+    counter = 0 
+
+    Do index_options=1,number_galaxies_in_CF3
+
+       If ( (redshift(index_options) .ge. redshift_min) .and. (redshift(index_options) .le. redshift_max) ) then
+
+          counter = counter + 1
+          
+       Else
+
+          continue
+
+       End If
+
+    End Do
+    
+    write(UNIT_EXE_FILE,*) ''
+
+    write(UNIT_EXE_FILE,*) 'AND THE CURRENT ANALYSIS USES ', counter, 'GALAXIES, THAT IS, ',&
+         real(counter)/real(number_galaxies_in_CF3)*1.d2,'% OF THE AVAILABLE DATA SET'
+
+    write(UNIT_EXE_FILE,*) ''
 
     write(UNIT_EXE_FILE,*) 'DIVIDING THE CF3 CATALOGUE IN ', number_redshift_bins,' RED-SHIFT BINS'
 
@@ -79,8 +134,6 @@ Program h0cf3
     write(UNIT_EXE_FILE,*) 'OF PIXELS IN THE NUMBER COUNTS MAPS EQUAL TO ', npixC
 
     write(UNIT_EXE_FILE,*) ' '
-
-    stop
 
 !###########################
 ! TESTING CODE (IF REQUIRED)
@@ -147,6 +200,45 @@ Program h0cf3
 
     End If
 
+    If (do_supernovae_distribution_plots) then
+
+       write(UNIT_EXE_FILE,*) 'FIGURES ANGULAR SUPERNOVAE DISTRIBUTION BEING CREATED'
+
+       Do index_options=1,3
+
+          call write_python_script_angular_distribution_supernovae(index_options)
+
+       End Do
+
+       call write_mpi_file('ang_dist_sne_whole_JLA_dataset',1)
+
+       call write_mpi_file('ang_dist_sne_redshift_bins_JLA_dataset',2)
+
+       call write_mpi_file('ang_dist_sne_redshift_bins_cumulative_JLA_dataset',3)
+
+       write(UNIT_EXE_FILE,*) ' '
+
+       call system('cd scripts; sbatch ang_dist_sne_whole_JLA_dataset.mpi')
+
+       write(UNIT_EXE_FILE,*) ' '
+
+       call system('cd scripts; sbatch ang_dist_sne_redshift_bins_JLA_dataset.mpi')
+
+       write(UNIT_EXE_FILE,*) ' '
+
+       call system('cd scripts; sbatch ang_dist_sne_redshift_bins_cumulative_JLA_dataset.mpi')
+
+       write(UNIT_EXE_FILE,*) ' '
+
+    Else
+
+       write(UNIT_EXE_FILE,*) 'NOT DOING ANGULAR SUPERNOVAE DISTRIBUTION FIGURES'
+
+       write(UNIT_EXE_FILE,*) ' '
+
+    End If
+
+    stop
     write(UNIT_EXE_FILE,*) 'COMPUTING NUMBER COUNTS MAPS FOR DIFFERENT REDSHIFT BINS'
 
     write(UNIT_EXE_FILE,*) ' '

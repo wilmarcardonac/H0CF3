@@ -555,6 +555,317 @@ subroutine write_mpi_file(name_python_file,option)
 
 end subroutine write_mpi_file
 
+subroutine write_python_script_angular_distribution_supernovae(option)
+    
+    use fiducial
+    Implicit none
+
+    Integer*4 :: option
+
+    If (option .eq. 1) then
+
+       open(10, file='./scripts/ang_dist_sne_whole_JLA_dataset.py')
+
+    Else If (option .eq. 2) then
+
+       open(10, file='./scripts/ang_dist_sne_redshift_bins_JLA_dataset.py')
+       
+    Else If (option .eq. 3) then
+
+       open(10, file='./scripts/ang_dist_sne_redshift_bins_cumulative_JLA_dataset.py')
+
+    Else
+
+       write(UNIT_EXE_FILE,*) 'SUBROUTINE TO WRITE PYTHON SCRIPT ONLY ACCEPTS THREE OPTIONS: 1, 2, OR 3.'&
+             &'DIFFERENT OPTION WAS GIVEN'
+       
+       stop
+
+    End If
+
+    write(10,'(a)') 'import numpy as np'
+    write(10,'(a)') 'import math'
+    write(10,'(a)') 'import matplotlib as mpl'
+    write(10,'(a)') "mpl.use('Agg')"
+    write(10,'(a)') 'import matplotlib.pyplot as py'
+    write(10,'(a)') 'from matplotlib.colors import LogNorm'
+    write(10,'(a)') 'import healpy as hp'
+    write(10,'(a)') "marker = ['bo','rs','go','bv','r^','g<','b>','rD','g+','bx','r*','bo']"
+
+    write(10,'(a)') "z,Glon,Glat = np.loadtxt('../data/jla_data.txt',unpack=True)"
+
+    write(10,'(a,i4)') 'Nside = ', nsmax
+
+    write(10,'(a)') 'lmax = 3*Nside - 1'
+
+    write(10,'(a,es16.10)') 'z_min = ', redshift_min 
+
+    write(10,'(a,es16.10)') 'z_max = ', redshift_max 
+
+    write(10,'(a,es16.10)') 'z_step = ', redshift_step
+
+    If (option .eq. 1) then
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min) & (z[index] <= z_min+z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[0],lonlat=True,coord='G')"
+
+       write(10,'(a)') '    elif ( (z[index] > z_min+z_step) & (z[index] <= z_min+2.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[1],lonlat=True,coord='G')"
+
+       write(10,'(a)') '    elif ( (z[index] > z_min+2.*z_step) & (z[index] <= z_min+3.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[2],lonlat=True,coord='G')"
+
+       write(10,'(a)') '    elif ( (z[index] > z_min+3.*z_step) & (z[index] <= z_min+4.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[3],lonlat=True,coord='G')"
+
+       write(10,'(a)') '    elif ( (z[index] > z_min+4.*z_step) & (z[index] <= z_min+5.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[4],lonlat=True,coord='G')"
+
+       write(10,'(a)') '    elif ( (z[index] > z_min+5.*z_step) & (z[index] <= z_min+6.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[5],lonlat=True,coord='G')"
+
+       write(10,'(a)') '    elif ( (z[index] > z_min+6.*z_step) & (z[index] <= z_min+7.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[6],lonlat=True,coord='G')"
+
+       write(10,'(a)') '    elif ( (z[index] > z_min+7.*z_step) & (z[index] <= z_min+8.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[7],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_whole_JLA_dataset.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+    Else If (option .eq. 2) then
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min) & (z[index] <= z_min+z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[0],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min+z_step) & (z[index] <= z_min+2.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[1],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min+z_step)+'_z_max'+str(z_min+2.*z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min+2.*z_step) & (z[index] <= z_min+3.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[2],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min+2.*z_step)+'_z_max'+str(z_min+3.*z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min+3.*z_step) & (z[index] <= z_min+4.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[3],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min+3.*z_step)+'_z_max'+str(z_min+4.*z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min+4.*z_step) & (z[index] <= z_min+5.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[4],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min+4.*z_step)+'_z_max'+str(z_min+5.*z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min+5.*z_step) & (z[index] <= z_min+6.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[5],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min+5.*z_step)+'_z_max'+str(z_min+6.*z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min+6.*z_step) & (z[index] <= z_min+7.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[6],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min+6.*z_step)+'_z_max'+str(z_min+7.*z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min+7.*z_step) & (z[index] <= z_min+8.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[7],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min+7.*z_step)+'_z_max'+str(z_min+8.*z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+    Else If (option .eq. 3) then
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min) & (z[index] <= z_min+z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[0],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min) & (z[index] <= z_min+2.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[1],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+2.*z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min) & (z[index] <= z_min+3.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[2],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+3.*z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min) & (z[index] <= z_min+4.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[3],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+4.*z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min) & (z[index] <= z_min+5.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[4],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+5.*z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min) & (z[index] <= z_min+6.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[5],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+6.*z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min) & (z[index] <= z_min+7.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[6],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+7.*z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+       write(10,'(a)') "hp.graticule(dpar=10.,dmer=10.,coord='G')"
+
+       write(10,'(a)') 'for index in range(len(z)):'
+
+       write(10,'(a)') '    if ( (z[index] > z_min) & (z[index] <= z_min+8.*z_step) ):'
+
+       write(10,'(a)') "        hp.projplot(Glon[index],Glat[index],marker[7],lonlat=True,coord='G')"
+
+       write(10,'(a)') "py.savefig('../figures/angular_distribution_supernovae_redshift_bin_z_min_'+&
+            &str(z_min)+'_z_max'+str(z_min+8.*z_step)+'_JLA.pdf')"
+
+       write(10,'(a)') 'py.close()'
+
+    End If
+
+    write(10,'(a)') 'exit()'
+
+    close(10)
+
+end subroutine write_python_script_angular_distribution_supernovae
+
 subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip_amplitude,dip_latitude,dip_longitude,&
      noise_dip_amplitude,noise_dip_latitude,noise_dip_longitude)
 
