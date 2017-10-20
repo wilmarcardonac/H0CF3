@@ -27,6 +27,8 @@ Program h0cf3
     
     Real*8 :: current_dipole_amplitude,current_dipole_latitude,current_dipole_longitude,wtime
     Real*8 :: noise_dipole_amplitude, noise_dipole_latitude, noise_dipole_longitude
+    Real*8 :: current_dipole_amplitude_jla,current_dipole_latitude_jla,current_dipole_longitude_jla
+    Real*8 :: noise_dipole_amplitude_jla, noise_dipole_latitude_jla, noise_dipole_longitude_jla
 
 !######################################
 ! INITIALIZATION OF VARIABLES AND FILES
@@ -38,52 +40,56 @@ Program h0cf3
 
     npixC = nside2npix(nsmax)
 
-    call read_data_CF3(PATH_TO_COSMICFLOWS_DATA)
-
-    call read_data_JLA(PATH_TO_JLA_DATA)
-
     write(UNIT_EXE_FILE,*) 'THIS PROJECT AIMS AT STUDYING THE DISCREPANCY BETWEEN LOCAL AND GLOBAL MEASUREMENTS '
     write(UNIT_EXE_FILE,*) 'OF THE HUBBLE EXPANSION RATE'
 
     write(UNIT_EXE_FILE,*) ' '
 
-    write(UNIT_EXE_FILE,*) 'DATA FROM THE JLA DATA SET SUCCESFULLY READ '
+    If (do_JLA_analysis) then
 
-    write(UNIT_EXE_FILE,*) ' '
+       call read_data_JLA(PATH_TO_JLA_DATA)
 
-    write(UNIT_EXE_FILE,*) 'MINIMUM RED-SHIFT IN THE JLA DATA SET IS: ', minval(redshift_jla)
+       write(UNIT_EXE_FILE,*) 'DATA FROM THE JLA DATA SET SUCCESFULLY READ '
 
-    write(UNIT_EXE_FILE,*) ' '
+       write(UNIT_EXE_FILE,*) ' '
 
-    write(UNIT_EXE_FILE,*) 'MAXIMUM RED-SHIFT IN THE JLA DATA SET IS: ', maxval(redshift_jla) 
+       write(UNIT_EXE_FILE,*) 'MINIMUM RED-SHIFT IN THE JLA DATA SET IS: ', minval(redshift_jla)
 
-    write(UNIT_EXE_FILE,*) ' '
+       write(UNIT_EXE_FILE,*) ' '
 
-    write(UNIT_EXE_FILE,*) 'THERE ARE ', number_supernovae_in_JLA, 'SUPERNOVAE IN THE JLA DATA SET'
+       write(UNIT_EXE_FILE,*) 'MAXIMUM RED-SHIFT IN THE JLA DATA SET IS: ', maxval(redshift_jla) 
 
-    counter = 0 
+       write(UNIT_EXE_FILE,*) ' '
 
-    Do index_options=1,number_supernovae_in_JLA
+       write(UNIT_EXE_FILE,*) 'THERE ARE ', number_supernovae_in_JLA, 'SUPERNOVAE IN THE JLA DATA SET'
 
-       If ( (redshift_jla(index_options) .ge. redshift_min_jla) .and. (redshift_jla(index_options) &
-            .le. redshift_max_jla) ) then
+       counter = 0 
 
-          counter = counter + 1
+       Do index_options=1,number_supernovae_in_JLA
+
+          If ( (redshift_jla(index_options) .ge. redshift_min_jla) .and. (redshift_jla(index_options) &
+               .le. redshift_max_jla) ) then
+             
+             counter = counter + 1
           
-       Else
+          Else
 
-          continue
+             continue
 
-       End If
+          End If
 
-    End Do
+       End Do
     
-    write(UNIT_EXE_FILE,*) ''
+       write(UNIT_EXE_FILE,*) ''
 
-    write(UNIT_EXE_FILE,*) 'AND THE CURRENT ANALYSIS USES ', counter, 'SUPERNOVAE, THAT IS, ',&
-         real(counter)/real(number_supernovae_in_JLA)*1.d2,'% OF THE AVAILABLE DATA SET'
+       write(UNIT_EXE_FILE,*) 'AND THE CURRENT ANALYSIS USES ', counter, 'SUPERNOVAE, THAT IS, ',&
+            real(counter)/real(number_supernovae_in_JLA)*1.d2,'% OF THE AVAILABLE DATA SET'
 
-    write(UNIT_EXE_FILE,*) ''
+       write(UNIT_EXE_FILE,*) ''
+
+    End If
+
+    call read_data_CF3(PATH_TO_COSMICFLOWS_DATA)
 
     write(UNIT_EXE_FILE,*) 'DATA FROM THE COSMICFLOWS-3 COMPILATION SUCCESFULLY READ '
 
@@ -200,45 +206,48 @@ Program h0cf3
 
     End If
 
-    If (do_supernovae_distribution_plots) then
+    If (do_JLA_analysis) then
 
-       write(UNIT_EXE_FILE,*) 'FIGURES ANGULAR SUPERNOVAE DISTRIBUTION BEING CREATED'
+       If (do_supernovae_distribution_plots) then
 
-       Do index_options=1,3
+          write(UNIT_EXE_FILE,*) 'FIGURES ANGULAR SUPERNOVAE DISTRIBUTION BEING CREATED'
 
-          call write_python_script_angular_distribution_supernovae(index_options)
+          Do index_options=1,3
 
-       End Do
+             call write_python_script_angular_distribution_supernovae(index_options)
 
-       call write_mpi_file('ang_dist_sne_whole_JLA_dataset',1)
+          End Do
 
-       call write_mpi_file('ang_dist_sne_redshift_bins_JLA_dataset',2)
+          call write_mpi_file('ang_dist_sne_whole_JLA_dataset',1)
 
-       call write_mpi_file('ang_dist_sne_redshift_bins_cumulative_JLA_dataset',3)
+          call write_mpi_file('ang_dist_sne_redshift_bins_JLA_dataset',2)
 
-       write(UNIT_EXE_FILE,*) ' '
+          call write_mpi_file('ang_dist_sne_redshift_bins_cumulative_JLA_dataset',3)
 
-       call system('cd scripts; sbatch ang_dist_sne_whole_JLA_dataset.mpi')
+          write(UNIT_EXE_FILE,*) ' '
 
-       write(UNIT_EXE_FILE,*) ' '
+          call system('cd scripts; sbatch ang_dist_sne_whole_JLA_dataset.mpi')
 
-       call system('cd scripts; sbatch ang_dist_sne_redshift_bins_JLA_dataset.mpi')
+          write(UNIT_EXE_FILE,*) ' '
 
-       write(UNIT_EXE_FILE,*) ' '
+          call system('cd scripts; sbatch ang_dist_sne_redshift_bins_JLA_dataset.mpi')
 
-       call system('cd scripts; sbatch ang_dist_sne_redshift_bins_cumulative_JLA_dataset.mpi')
+          write(UNIT_EXE_FILE,*) ' '
 
-       write(UNIT_EXE_FILE,*) ' '
+          call system('cd scripts; sbatch ang_dist_sne_redshift_bins_cumulative_JLA_dataset.mpi')
 
-    Else
+          write(UNIT_EXE_FILE,*) ' '
 
-       write(UNIT_EXE_FILE,*) 'NOT DOING ANGULAR SUPERNOVAE DISTRIBUTION FIGURES'
+       Else
 
-       write(UNIT_EXE_FILE,*) ' '
+          write(UNIT_EXE_FILE,*) 'NOT DOING ANGULAR SUPERNOVAE DISTRIBUTION FIGURES'
+
+          write(UNIT_EXE_FILE,*) ' '
+
+       End If
 
     End If
 
-    stop
     write(UNIT_EXE_FILE,*) 'COMPUTING NUMBER COUNTS MAPS FOR DIFFERENT REDSHIFT BINS'
 
     write(UNIT_EXE_FILE,*) ' '
@@ -254,6 +263,16 @@ Program h0cf3
        write(UNIT_CL_FILE,*) '# MEAN RED-SHIFT    AMPLITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95'//trim('    ')//&
             '    LATITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95    LONGITUDE    MEAN    LEFT68'//trim('    ')//&
             '    RIGHT68    LEFT95    RIGHT95    NOISE_AMPLITUDE    NOISE_LATITUDE    NOISE_LONGITUDE'
+
+       If (do_JLA_analysis) then
+
+          open(UNIT_CL_FILE_JLA,file=PATH_TO_CONFIDENCE_LIMITS_OUTPUT_JLA)
+
+          write(UNIT_CL_FILE_JLA,*) '# MEAN RED-SHIFT    AMPLITUDE    MEAN    LEFT68    RIGHT68    '//trim('    ')//&
+               'LEFT95    RIGHT95    LATITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95    '//trim('    ')//&
+               'LONGITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95    NOISE_AMPLITUDE    NOISE_LATITUDE    NOISE_LONGITUDE'
+
+       End If
 
     Else
 
@@ -290,11 +309,52 @@ Program h0cf3
           write(UNIT_EXE_FILE,*) 'JACKKNIFE ANALYSIS IN RED-SHIFT BIN ZMIN ',redshift_min,' ZMAX ',&
                redshift_min+index_options*redshift_step,' ENDED '
 
+
           write(UNIT_EXE_FILE,*) ' '
 
        Else
 
           continue
+
+       End If
+
+       write(UNIT_EXE_FILE,*) '******************************************************************'
+
+       If (do_JLA_analysis) then
+
+          call compute_number_counts_map_jla(redshift_min_jla,redshift_min_jla+index_options*redshift_step,.false.,&
+               i,current_dipole_amplitude_jla,current_dipole_latitude_jla,current_dipole_longitude_jla,&
+               noise_dipole_amplitude_jla, noise_dipole_latitude_jla, noise_dipole_longitude_jla)
+
+          write(UNIT_EXE_FILE,*) '********** JLA RED-SHIFT BIN', index_options, '**********'
+
+          write(UNIT_EXE_FILE,*) 'JLA AMPLITUDE DIPOLE ZMIN ',redshift_min_jla,' ZMAX ',&
+               redshift_min_jla+index_options*redshift_step,' IS ', current_dipole_amplitude_jla
+
+          write(UNIT_EXE_FILE,*) 'JLA DIPOLE LATITUDE IS ', current_dipole_latitude_jla
+
+          write(UNIT_EXE_FILE,*) 'JLA DIPOLE LONGITUDE IS ', current_dipole_longitude_jla
+
+          write(UNIT_EXE_FILE,*) ' '
+
+          If (do_jackknife_analysis) then
+
+             call jackknife_analysis_jla(redshift_min_jla,redshift_min_jla+index_options*redshift_step,&
+                  current_dipole_amplitude_jla,current_dipole_latitude_jla,current_dipole_longitude_jla,&
+                  noise_dipole_amplitude_jla, noise_dipole_latitude_jla, noise_dipole_longitude_jla)
+
+             write(UNIT_EXE_FILE,*) 'JLA JACKKNIFE ANALYSIS IN RED-SHIFT BIN ZMIN ',redshift_min_jla,' ZMAX ',&
+                  redshift_min_jla+index_options*redshift_step,' ENDED '
+
+             write(UNIT_EXE_FILE,*) ' '
+
+          Else
+
+             continue
+
+          End If
+
+          write(UNIT_EXE_FILE,*) '******************************************************************'
 
        End If
        
@@ -303,10 +363,18 @@ Program h0cf3
 
     call system('python scripts/plot_results_jackknife_analysis.py')
 
+    If (do_jackknife_analysis) then
+
+       call system('python scripts/plot_results_jackknife_analysis_jla.py')
+
+       close(UNIT_CL_FILE_JLA)
+
+    End If
+
     write(UNIT_EXE_FILE,*) 'THE ANALYSIS WAS PERFORMED IN ',(omp_get_wtime()-wtime)/3.6d3,' HOURS'
 
     close(UNIT_CL_FILE)
-
+    
     close(UNIT_EXE_FILE)
 
 End Program h0cf3

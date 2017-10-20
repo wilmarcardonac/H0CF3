@@ -23,6 +23,8 @@ Module fiducial
   Integer*4,parameter :: UNIT_JACKKNIFE_FILE = 91     ! UNIT NUMBER FOR JACKKNIFE ANALYSIS FILE 
   Integer*4,parameter :: UNIT_ANAFAST_PAR_FILE = 92   ! UNIT NUMBER FOR FILE
   Integer*4,parameter :: UNIT_CL_FILE = 93  ! UNIT NUMBER FOR CONFIDENCE LIMITS FILE
+  Integer*4,parameter :: UNIT_CL_FILE_JLA = 94  ! UNIT NUMBER FOR CONFIDENCE LIMITS JLA FILE
+  Integer*4,parameter :: UNIT_JACKKNIFE_FILE_JLA = 95     ! UNIT NUMBER FOR JLA JACKKNIFE ANALYSIS FILE 
   Integer(kind=I4B), parameter :: RING_ORDERING = 1 
   Integer(kind=I4B), parameter :: DEGREE_REMOVE_DIPOLE = 2
   Integer*2,parameter :: number_redshift_bins = 8 ! NUMBER REDSHIFT BINS IN THE ANALYSIS. BE CAREFUL WHEN CHANGING 'redshift_step', 'redshift_min', OR 'redshift_max'
@@ -44,9 +46,10 @@ Module fiducial
   Integer*4 :: number_supernovae_in_JLA  ! NUMBER OF SUPERNOVAE IN JLA DATA SET
 
   Logical,parameter   :: do_galaxy_distribution_plots = .false. ! DO PLOTS OF ANGULAR DISTRIBUTION OF GALAXIES IF SET IT TRUE
-  Logical,parameter   :: do_supernovae_distribution_plots = .true. ! DO PLOTS OF ANGULAR DISTRIBUTION OF SUPERNOVAE IF SET IT TRUE
+  Logical,parameter   :: do_supernovae_distribution_plots = .false. ! DO PLOTS OF ANGULAR DISTRIBUTION OF SUPERNOVAE IF SET IT TRUE
   Logical,parameter   :: do_jackknife_analysis = .true.        ! DO JACKKNIFE ANALYSIS IF SET IT TRUE
   Logical,parameter   :: do_tests = .false.   ! TEST THE CODE IF SET IT TRUE 
+  Logical,parameter   :: do_JLA_analysis = .true. ! ANALYSIS JLA DATA SET IF SET IT TRUE
 
   Character(len=*),parameter :: beam_file = " '' "    ! PATH TO BEAM FILE
   Character(len=*),parameter :: almsfile = " '' "     ! PATH ALMS FILE
@@ -61,7 +64,7 @@ Module fiducial
   Character(len=*),parameter :: PATH_TO_JLA_DATA = './data/jla_data.txt' ! COSMICFLOWS DATA REDSHIFT, GALACTIC LONGITUDE AND LATITUDE
   Character(len=*),parameter :: PATH_TO_FULL_COSMICFLOWS_DATA = './data/CF-3.txt' ! FULL COSMICFLOWS 3 DATA SET
   Character(len=*),parameter :: PATH_TO_CONFIDENCE_LIMITS_OUTPUT = './output/confidence_limits.txt' ! PATH TO OUTPUT FROM JACKKNIFE ANALYSIS (CL) 
-!  Character(len=*),parameter :: PATH_TO_VSK_MASK = './vsk_maps/vsk_mask.fits' ! VSK MASK TO BE USED (RING ORDERING)
+  Character(len=*),parameter :: PATH_TO_CONFIDENCE_LIMITS_OUTPUT_JLA = './output/confidence_limits_jla.txt' ! PATH TO OUTPUT FROM JACKKNIFE ANALYSIS FOR JLA (CL)
 !  Character(len=*),parameter :: PATH_TO_VSK_SPECTRA = './vsk_angular_power_spectrum/' 
   Character(len=*),parameter :: PATH_TO_JACKKNIFE_ANALYSIS_OUTPUT = './output/' ! PATH TO CMB FREQUENCY MAPS (DATA AND FFP8.1 SIMULATIONS)
 

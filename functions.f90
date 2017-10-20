@@ -1121,6 +1121,261 @@ subroutine compute_number_counts_map(zmin,zmax,jackknife,data_index_excluded,dip
 
 end subroutine compute_number_counts_map
 
+subroutine compute_number_counts_map_jla(zmin,zmax,jackknife,data_index_excluded,dip_amplitude,dip_latitude,dip_longitude,&
+     noise_dip_amplitude,noise_dip_latitude,noise_dip_longitude)
+
+  use healpix_types
+  use udgrade_nr, only: udgrade_ring, udgrade_nest
+  use pix_tools, only: nside2npix,convert_ring2nest, convert_nest2ring,remove_dipole, ang2pix_ring, vec2ang
+  use fitstools, only: getsize_fits, input_map, output_map
+  use head_fits
+  use fiducial
+  use arrays
+
+  Implicit none
+
+  Character(len=80),dimension(1:60) :: header
+  Character(len=4) :: Ns
+  Character(len=5) :: xmin,xmax
+
+  Real*8 :: zmin,zmax,mean_nc,dip_amplitude,dip_latitude,dip_longitude
+  Real*8 :: noise_dip_amplitude,noise_dip_latitude,noise_dip_longitude
+  Real(kind=DP),dimension(0:DEGREE_REMOVE_DIPOLE*DEGREE_REMOVE_DIPOLE-1) :: multipoles, multipoles_noise ! SAVES MONOPOLE AND DIPOLE OF CMB MAP 
+  Real(kind=DP),dimension(1:2) :: zbounds,zbounds_noise ! BOUNDS TO COMPUTE DIPOLE AND MONOPOLE
+  Real(kind=DP) :: theta,phi,theta_noise,phi_noise ! COLATITUDE AND LONGITUDE
+
+  Integer*8 :: data_index, index_i,data_index_excluded
+  Integer(kind=I8B) :: ipring ! NUMBERS PIXELS IN NUMBER COUNTS MAP
+
+  Logical :: jackknife
+  Logical :: exist
+
+  zbounds(:) = 0.d0
+  zbounds_noise(:) = 0.d0
+
+  If (jackknife) then
+
+     If (data_index_excluded .ge. 1) then
+
+        continue
+
+     Else
+
+        write(UNIT_EXE_FILE,*) 'WHEN DOING JACKKNIFE ANALYSIS SET "data_index_excluded" TO A POSITIVE INTEGER'&
+             &'SUBROUTINE "compute_number_counts_map". CURRENT VALUE IS: ', data_index_excluded
+
+        stop
+
+     End If
+
+  Else
+
+     If (data_index_excluded .lt. 0) then
+
+        continue 
+
+     Else
+
+        write(UNIT_EXE_FILE,*) 'WHEN NOT DOING JACKKNIFE ANALYSIS SET "data_index_excluded" TO A NEGATIVE INTEGER'&
+             &'SUBROUTINE "compute_number_counts_map". CURRENT VALUE IS: ', data_index_excluded
+
+        stop
+
+     End If
+
+  End If
+
+  write(xmin,'(F5.3)') zmin
+  write(xmax,'(F5.3)') zmax
+  write(Ns,'(I4.4)') nsmax
+
+  allocate (map(0:npixC-1,1:1), map_nc(0:npixC-1,1:1), shot_noise(0:npixC-1,1:1),& 
+         mask(0:npixC-1,1:1), stat = status1)
+
+  call write_minimal_header(header, 'MAP', nside = nsmax, ordering = ORDERING_NC_MAPS, coordsys = SYS_COORD) ! HEADER OF NUMBER COUNTS MAPS
+
+  map(0:npixC-1,1) = 0.d0 ! INITIALIZATION OF NUMBER COUNTS MAP
+  map_nc(0:npixC-1,1) = HPX_DBADVAL ! INITIALIZATION OF NORMALISED NUMBER COUNTS MAP
+  shot_noise(0:npixC-1,1) = HPX_DBADVAL ! INITIALIZATION OF SHOT NOISE MASK
+  mask(0:npixC-1,1) = 0.d0 ! INITIALIZATION OF NUMBER COUNTS MASK
+
+  Do data_index=1,number_supernovae_in_JLA
+
+     If ( (redshift_jla(data_index) .gt. zmin) .and. (redshift_jla(data_index) .le. zmax) ) then
+
+        If (jackknife) then
+
+           If (data_index .eq. data_index_excluded) then
+
+              continue 
+
+           Else
+
+              If ( galactic_latitude_jla(data_index) .lt. 0.d0 ) then
+
+                 call ang2pix_ring(nsmax,abs(galactic_latitude_jla(data_index))*DEG2RAD+HALFPI,&
+                      galactic_longitude_jla(data_index)*DEG2RAD,ipring)
+
+                 map(ipring,1) = map(ipring,1) + 1
+
+              Else
+
+                 call ang2pix_ring(nsmax,-abs(galactic_latitude_jla(data_index))*DEG2RAD+HALFPI,&
+                      galactic_longitude_jla(data_index)*DEG2RAD,ipring)
+
+                 map(ipring,1) = map(ipring,1) + 1
+
+              End If
+
+           End If
+
+        Else
+
+           If ( galactic_latitude_jla(data_index) .lt. 0.d0 ) then
+
+              call ang2pix_ring(nsmax,abs(galactic_latitude_jla(data_index))*DEG2RAD+HALFPI,&
+                   galactic_longitude_jla(data_index)*DEG2RAD,ipring)
+
+              map(ipring,1) = map(ipring,1) + 1
+
+           Else
+
+              call ang2pix_ring(nsmax,-abs(galactic_latitude_jla(data_index))*DEG2RAD+HALFPI,&
+                   galactic_longitude_jla(data_index)*DEG2RAD,ipring)
+
+              map(ipring,1) = map(ipring,1) + 1
+
+           End If
+
+        End If
+
+     Else
+
+        continue
+
+     End If
+
+  End Do
+
+  mean_nc = sum(map)/npixC
+
+  Do index_i=0,npixC-1
+
+     If ( map(index_i,1) .gt. 0.d0 ) then
+
+        mask(index_i,1) = 1.d0
+
+        shot_noise(index_i,1) = 1.d0/map(index_i,1)
+
+        map_nc(index_i,1) = ( map(index_i,1) - mean_nc )/mean_nc
+
+     End If
+
+  End Do
+
+  If (jackknife) then
+
+     continue
+
+  Else
+
+     inquire(file = './output/map_jla_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//'_Nside_'//trim(Ns)//'.fits',exist=exist)
+
+     If (exist) then
+
+        call system("rm ./output/map_jla_zmin_"//trim(xmin)//"_zmax_"//trim(xmax)//"_Nside_"//trim(Ns)//".fits")
+
+     Else
+
+        continue
+
+     End If
+
+     call output_map(map,header,'./output/map_jla_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//'_Nside_'//trim(Ns)//'.fits')
+
+     inquire(file = './output/mask_jla_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//'_Nside_'//trim(Ns)//'.fits',exist=exist)
+
+     If (exist) then
+
+        call system("rm ./output/mask_jla_zmin_"//trim(xmin)//"_zmax_"//trim(xmax)//"_Nside_"//trim(Ns)//".fits")
+
+     Else
+
+        continue
+
+     End If
+
+     call output_map(mask,header,'./output/mask_jla_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//'_Nside_'//trim(Ns)//'.fits')
+
+     write(UNIT_EXE_FILE,*) ' '
+
+     write(UNIT_EXE_FILE,*) 'SKY FRACTION FOR CURRENT RED-SHIFT BIN IN JLA DATA SET IS ', sum(mask)/npixC
+
+     write(UNIT_EXE_FILE,*) ' '
+
+     inquire(file = './output/shot_noise_jla_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//&
+          '_Nside_'//trim(Ns)//'.fits',exist=exist)
+
+     If (exist) then
+
+        call system("rm ./output/shot_noise_jla_zmin_"//trim(xmin)//"_zmax_"//trim(xmax)//&
+          "_Nside_"//trim(Ns)//".fits")
+
+     Else
+
+        continue
+
+     End If
+
+     call output_map(shot_noise,header,'./output/shot_noise_jla_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//&
+          '_Nside_'//trim(Ns)//'.fits')
+
+     inquire(file = './output/number_counts_map_jla_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//&
+          '_Nside_'//trim(Ns)//'.fits',exist=exist)
+
+     If (exist) then
+
+        call system("rm ./output/number_counts_map_jla_zmin_"//trim(xmin)//"_zmax_"//trim(xmax)//&
+          "_Nside_"//trim(Ns)//".fits")
+
+     Else
+
+        continue
+
+     End If
+
+     call output_map(map_nc,header,'./output/number_counts_map_jla_zmin_'//trim(xmin)//'_zmax_'//trim(xmax)//&
+          '_Nside_'//trim(Ns)//'.fits')
+
+     ! TO DO: HERE I MUST IMPLEMENT ANGULAR POWER SPECTRUM COMPUTATION
+  End If
+
+  call remove_dipole(nsmax,map_nc(0:npixC-1,1),RING_ORDERING,DEGREE_REMOVE_DIPOLE,multipoles,zbounds,&
+       HPX_DBADVAL,mask(0:npixC-1,1))
+
+  dip_amplitude = sqrt(multipoles(1)**2 + multipoles(2)**2 + multipoles(3)**2)
+
+  call vec2ang(multipoles(1:3),theta,phi)
+
+  dip_longitude = phi*RAD2DEG
+
+  dip_latitude = (HALFPI - theta)*RAD2DEG
+
+  call remove_dipole(nsmax,shot_noise(0:npixC-1,1),RING_ORDERING,DEGREE_REMOVE_DIPOLE,multipoles_noise,&
+  zbounds_noise,HPX_DBADVAL,mask(0:npixC-1,1))
+
+  noise_dip_amplitude = sqrt(multipoles_noise(1)**2 + multipoles_noise(2)**2 + multipoles_noise(3)**2)
+
+  call vec2ang(multipoles_noise(1:3),theta_noise,phi_noise)
+
+  noise_dip_longitude = phi_noise*RAD2DEG
+
+  noise_dip_latitude = (HALFPI - theta_noise)*RAD2DEG
+
+  deallocate (map, shot_noise, mask, map_nc, stat = status1)
+
+end subroutine compute_number_counts_map_jla
+
 subroutine test_remove_dipole()
 
   use healpix_types
@@ -1298,7 +1553,7 @@ subroutine jackknife_analysis(zmin,zmax,current_amplitude,current_latitude,curre
 
   If (flag_latitude) then
 
-     write(UNIT_EXE_FILE,*) 'IN MEAN REDSHIFT ', mean_redshift, '68% AND 95% WERE FOUND'
+     write(UNIT_EXE_FILE,*) 'IN MEAN REDSHIFT ', mean_redshift, 'CL WERE FOUND'
 
      write(UNIT_EXE_FILE,*) 'GALACTIC LATITUDE: MEAN, INNER CL, AND OUTER CL', meanla, left68la, right68la, left95la, right95la
 
@@ -1342,6 +1597,178 @@ subroutine jackknife_analysis(zmin,zmax,current_amplitude,current_latitude,curre
        jack_noise_galactic_latitude, stat=status1)
 
 end subroutine jackknife_analysis
+
+subroutine jackknife_analysis_jla(zmin,zmax,current_amplitude,current_latitude,current_longitude,&
+     noise_amplitude,noise_latitude,noise_longitude)
+
+!  use healpix_types
+!  use udgrade_nr, only: udgrade_ring, udgrade_nest
+!  use pix_tools, only: nside2npix,convert_ring2nest, convert_nest2ring,remove_dipole, ang2pix_ring, vec2ang
+!  use fitstools, only: getsize_fits, input_map, output_map
+!  use head_fits
+  use fiducial
+  use arrays
+  use omp_lib
+
+  Implicit none
+
+  Character(len=4) :: Ns
+  Character(len=5) :: xmin,xmax
+
+  Real*8 :: zmin,zmax, meana, left68a,right68a,left95a,right95a, mean_redshift
+  Real*8 :: meanla, left68la,right68la,left95la,right95la
+  Real*8 :: meanlo, left68lo,right68lo,left95lo,right95lo
+  Real*8 :: current_amplitude,current_latitude,current_longitude
+  Real*8 :: noise_amplitude,noise_latitude,noise_longitude
+
+  Integer*8 :: counter_data_points, data_index, index_jackknife_analysis, dimension_jackknife_analysis
+
+  Logical :: flag_dipole, flag_longitude, flag_latitude
+
+  write(xmin,'(F5.3)') zmin
+  write(xmax,'(F5.3)') zmax
+  write(Ns,'(I4.4)') nsmax
+
+  counter_data_points = 0
+
+  mean_redshift = 0.d0
+
+  Do data_index=1,number_supernovae_in_JLA
+
+     If ( (redshift_jla(data_index) .gt. zmin) .and. (redshift_jla(data_index) .le. zmax) ) then
+
+        counter_data_points = counter_data_points + 1 
+
+        mean_redshift = redshift_jla(data_index) + mean_redshift
+
+     End If
+
+  End Do
+
+  mean_redshift = mean_redshift/counter_data_points
+
+  allocate (jackknife_data_indices(1:counter_data_points),jackknife_dipole_amplitude(1:counter_data_points),&
+       jackknife_galactic_longitude(1:counter_data_points),jackknife_galactic_latitude(1:counter_data_points),&
+       jack_noise_dipole_amplitude(1:counter_data_points),jack_noise_galactic_longitude(1:counter_data_points),&
+       jack_noise_galactic_latitude(1:counter_data_points),stat=status1)
+
+  dimension_jackknife_analysis = counter_data_points
+
+  counter_data_points = 1
+
+  Do data_index=1,number_supernovae_in_JLA
+
+     If ( (redshift_jla(data_index) .gt. zmin) .and. (redshift_jla(data_index) .le. zmax) ) then
+
+        jackknife_data_indices(counter_data_points) = data_index
+
+        counter_data_points = counter_data_points + 1
+
+     Else
+
+        continue
+
+     End If
+
+  End Do
+
+  Do index_jackknife_analysis=1,dimension_jackknife_analysis
+
+     call compute_number_counts_map_jla(zmin,zmax,.true.,jackknife_data_indices(index_jackknife_analysis),&
+          jackknife_dipole_amplitude(index_jackknife_analysis),jackknife_galactic_latitude(index_jackknife_analysis),&
+          jackknife_galactic_longitude(index_jackknife_analysis),jack_noise_dipole_amplitude(index_jackknife_analysis),&
+          jack_noise_galactic_latitude(index_jackknife_analysis),jack_noise_galactic_longitude(index_jackknife_analysis))
+
+  End Do
+
+  open(UNIT_JACKKNIFE_FILE_JLA,file= PATH_TO_JACKKNIFE_ANALYSIS_OUTPUT//trim('jla_jackknife_analysis_zmin')//'_'//trim(xmin)//&
+       '_zmax_'//trim(xmax)//'_Nside_'//trim(Ns)//'.txt')
+
+  Do index_jackknife_analysis=1,dimension_jackknife_analysis
+
+     write(UNIT_JACKKNIFE_FILE_JLA,89) jackknife_dipole_amplitude(index_jackknife_analysis),&
+          jackknife_galactic_latitude(index_jackknife_analysis),jackknife_galactic_longitude(index_jackknife_analysis)
+
+89   Format(3E20.10)
+
+  End Do
+
+  close(UNIT_JACKKNIFE_FILE_JLA)
+
+  call compute_confidence_limits(dimension_jackknife_analysis,jackknife_dipole_amplitude,meana,left68a,right68a,&
+       left95a,right95a,flag_dipole)
+  
+  write(UNIT_EXE_FILE,*) ' '
+
+  write(UNIT_EXE_FILE,*) 'JLA DIPOLE:'
+
+  If (flag_dipole) then
+
+     write(UNIT_EXE_FILE,*) 'IN MEAN REDSHIFT ', mean_redshift, 'JLA CL WERE FOUND'
+ 
+     write(UNIT_EXE_FILE,*) 'JLA DIPOLE AMPLITUDE: MEAN, INNER CL, AND OUTER CL', meana, left68a, right68a, left95a, right95a
+
+  Else
+
+!     write(UNIT_EXE_FILE,*) 'IN MEAN REDSHIFT ', mean_redshift, '68% AND 95% WERE NOT FOUND. CHECK EXECUTION FILE'
+ 
+!     write(UNIT_EXE_FILE,*) 'DIPOLE AMPLITUDE: MEAN, X% CL, AND Y% CL', meana, left68a, right68a, left95a, right95a
+
+  End If
+
+  call compute_confidence_limits(dimension_jackknife_analysis,jackknife_galactic_latitude,meanla,left68la,right68la,&
+       left95la,right95la,flag_latitude)
+  
+  write(UNIT_EXE_FILE,*) ' '
+
+  write(UNIT_EXE_FILE,*) 'JLA LATITUDE:'
+
+  If (flag_latitude) then
+
+     write(UNIT_EXE_FILE,*) 'IN MEAN REDSHIFT ', mean_redshift, 'JLA CL WERE FOUND'
+
+     write(UNIT_EXE_FILE,*) 'JLA GALACTIC LATITUDE: MEAN, INNER CL, AND OUTER CL', meanla, left68la, right68la, left95la, right95la
+
+  Else
+
+!     write(UNIT_EXE_FILE,*) 'IN MEAN REDSHIFT ', mean_redshift, '68% AND 95% WERE NOT FOUND. CHECK EXECUTION FILE'
+
+!     write(UNIT_EXE_FILE,*) 'GALACTIC LATITUDE: MEAN, X% CL, AND Y% CL', meanla, left68la, right68la, left95la, right95la
+
+  End If
+
+  call compute_confidence_limits(dimension_jackknife_analysis,jackknife_galactic_longitude,meanlo,left68lo,right68lo,&
+       left95lo,right95lo,flag_longitude)
+  
+  write(UNIT_EXE_FILE,*) ' '
+
+  write(UNIT_EXE_FILE,*) 'JLA LONGITUDE:'
+
+  If (flag_longitude) then
+
+     write(UNIT_EXE_FILE,*) 'IN MEAN REDSHIFT ', mean_redshift, 'JLA CL  WERE FOUND'
+
+     write(UNIT_EXE_FILE,*) 'JLA GALACTIC LONGITUDE: MEAN, INNER CL, AND OUTER CL', meanlo, left68lo, right68lo, left95lo, right95lo
+
+  Else
+
+!     write(UNIT_EXE_FILE,*) 'IN MEAN REDSHIFT ', mean_redshift, '68% AND 95% WERE NOT FOUND. CHECK EXECUTION FILE'
+
+!     write(UNIT_EXE_FILE,*) 'GALACTIC LONGITUDE: MEAN, 68% CL, AND 95% CL', meanlo, left68lo, right68lo, left95lo, right95lo
+
+  End If
+
+  write(UNIT_CL_FILE_JLA,90) mean_redshift, current_amplitude, meana, left68a, right68a, left95a, right95a, &
+       current_latitude, meanla,left68la, right68la, left95la, right95la, current_longitude, meanlo, left68lo, &
+       right68lo, left95lo, right95lo,noise_amplitude,noise_latitude,noise_longitude
+
+90 Format(22E20.10)
+
+  deallocate(jackknife_data_indices,jackknife_dipole_amplitude,jackknife_galactic_longitude,&
+       jackknife_galactic_latitude,jack_noise_dipole_amplitude, jack_noise_galactic_longitude,&
+       jack_noise_galactic_latitude, stat=status1)
+
+end subroutine jackknife_analysis_jla
 
 subroutine compute_confidence_limits(number_data_points,data_array,mean,left68,right68,left95,right95,flag_limits)
 

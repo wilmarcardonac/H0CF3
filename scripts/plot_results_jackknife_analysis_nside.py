@@ -80,7 +80,7 @@ py.legend(loc=0,numpoints=1,ncol=2)
 
 py.savefig("./output/Dipole_amplitude_nside.pdf",format="pdf", dpi=1000)
 
-# DIPOLE LONGITUDE
+# DIPOLE LATITUDE
 
 fig2 = py.figure()
 yerrV = np.zeros(2)
@@ -120,7 +120,7 @@ for index in range(len(z_mean)):
 #py.ylim(-2.,83.)
 py.xlabel(r'$\bar{z}$', fontsize=18)
 py.tick_params(axis='both', which='major', labelsize=15)
-py.ylabel(r'Dipole Longitude $[\degree]$', fontsize=18)
+py.ylabel(r'Dipole Latitude $[\degree]$', fontsize=18)
 #minor_ticks = np.arange(65, 85, 1)
 #ax = fig.add_subplot(111)
 #ax.tick_params(axis='both', which='minor', labelsize=12)
@@ -128,9 +128,9 @@ py.ylabel(r'Dipole Longitude $[\degree]$', fontsize=18)
 #py.gca().axes.get_yaxis().set_visible(False)
 #py.tight_layout(pad=0, h_pad=0, w_pad=0)
 py.legend(loc=0,numpoints=1,ncol=2)
-py.savefig("./output/Dipole_longitude_nside.pdf",format="pdf", dpi=1000)
+py.savefig("./output/Dipole_latitude_nside.pdf",format="pdf", dpi=1000)
 
-# DIPOLE LATITUDE
+# DIPOLE LONGITUDE
 
 fig3 = py.figure()
 yerrV = np.zeros(2)
@@ -169,7 +169,7 @@ for index in range(len(z_mean)):
 #py.ylim(-2.,83.)
 py.xlabel(r'$\bar{z}$', fontsize=18)
 py.tick_params(axis='both', which='major', labelsize=15)
-py.ylabel(r'Dipole Latitude $[\degree]$', fontsize=18)
+py.ylabel(r'Dipole Longitude $[\degree]$', fontsize=18)
 #minor_ticks = np.arange(65, 85, 1)
 #ax = fig.add_subplot(111)
 #ax.tick_params(axis='both', which='minor', labelsize=12)
@@ -177,6 +177,6 @@ py.ylabel(r'Dipole Latitude $[\degree]$', fontsize=18)
 #py.gca().axes.get_yaxis().set_visible(False)
 #py.tight_layout(pad=0, h_pad=0, w_pad=0)
 py.legend(loc=0,numpoints=1,ncol=2)
-py.savefig("./output/Dipole_latitude_nside.pdf",format="pdf", dpi=1000)
+py.savefig("./output/Dipole_longitude_nside.pdf",format="pdf", dpi=1000)
 
 exit()
