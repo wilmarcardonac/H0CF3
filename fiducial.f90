@@ -12,10 +12,10 @@ Module fiducial
   
   Real*8,parameter    :: miss = -1.63750d-13
   Real*8, parameter :: redshift_min = 1.d-2 ! SET LOWEST REDSHIFT FOR ANALYSIS 
-  Real*8, parameter :: redshift_max = 5.d-2 ! SET HIGHEST REDSHIFT FOR ANALYSIS 
+  Real*8, parameter :: redshift_max = 1.2d-1 !5.d-2 ! SET HIGHEST REDSHIFT FOR ANALYSIS. CURRENT CHOICES ARE: 0.05, 0.12, 1.30 
   Real*8, parameter :: redshift_step = 5.d-3 ! SET STEP IN REDSHIFT FOR ANALYSIS  
   Real*8, parameter :: redshift_min_jla = 1.d-2 ! SET LOWEST REDSHIFT FOR ANALYSIS 
-  Real*8, parameter :: redshift_max_jla = 5.d-2 ! SET HIGHEST REDSHIFT FOR ANALYSIS 
+  Real*8, parameter :: redshift_max_jla = 1.2d-1!5.d-2 ! SET HIGHEST REDSHIFT FOR ANALYSIS. CURRENT CHOICES ARE: 0.05, 0.12, 1.30 
 
   Integer(kind=I4B),parameter :: nsmax = 1  ! Nside FOR NUMBER COUNTS MAP: 2**M=1,2,4,8
   Integer*4,parameter :: nlmax = 2*nsmax    ! HIGHEST MULTIPOLE
@@ -27,7 +27,7 @@ Module fiducial
   Integer*4,parameter :: UNIT_JACKKNIFE_FILE_JLA = 95     ! UNIT NUMBER FOR JLA JACKKNIFE ANALYSIS FILE 
   Integer(kind=I4B), parameter :: RING_ORDERING = 1 
   Integer(kind=I4B), parameter :: DEGREE_REMOVE_DIPOLE = 2
-  Integer*2,parameter :: number_redshift_bins = 8 ! NUMBER REDSHIFT BINS IN THE ANALYSIS. BE CAREFUL WHEN CHANGING 'redshift_step', 'redshift_min', OR 'redshift_max'
+  Integer*2 :: number_redshift_bins ! NUMBER REDSHIFT BINS IN THE ANALYSIS. BE CAREFUL WHEN CHANGING 'redshift_step', 'redshift_min', OR 'redshift_max'
 
   Character(len=*),parameter :: ORDERING_NC_MAPS = 'RING'!'NESTED'    ! ORDERING NUMBER COUNTS MAPS
   Character(len=*),parameter :: SYS_COORD = 'G' ! MAP COORDINATE SYSTEM 

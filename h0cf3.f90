@@ -40,6 +40,8 @@ Program h0cf3
 
     npixC = nside2npix(nsmax)
 
+    number_redshift_bins = int((redshift_max - redshift_min)/redshift_step)
+
     write(UNIT_EXE_FILE,*) 'THIS PROJECT AIMS AT STUDYING THE DISCREPANCY BETWEEN LOCAL AND GLOBAL MEASUREMENTS '
     write(UNIT_EXE_FILE,*) 'OF THE HUBBLE EXPANSION RATE'
 
