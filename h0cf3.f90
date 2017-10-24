@@ -91,57 +91,61 @@ Program h0cf3
 
     End If
 
-    call read_data_CF3(PATH_TO_COSMICFLOWS_DATA)
+    If (do_CF3_analysis) then
 
-    write(UNIT_EXE_FILE,*) 'DATA FROM THE COSMICFLOWS-3 COMPILATION SUCCESFULLY READ '
+       call read_data_CF3(PATH_TO_COSMICFLOWS_DATA)
 
-    write(UNIT_EXE_FILE,*) ' '
+       write(UNIT_EXE_FILE,*) 'DATA FROM THE COSMICFLOWS-3 COMPILATION SUCCESFULLY READ '
 
-    write(UNIT_EXE_FILE,*) 'MINIMUM RED-SHIFT IN THE CF3 CATALOGUE IS: ', minval(redshift)
+       write(UNIT_EXE_FILE,*) ' '
 
-    write(UNIT_EXE_FILE,*) ' '
+       write(UNIT_EXE_FILE,*) 'MINIMUM RED-SHIFT IN THE CF3 CATALOGUE IS: ', minval(redshift)
 
-    write(UNIT_EXE_FILE,*) 'MAXIMUM RED-SHIFT IN THE CF3 CATALOGUE IS: ', maxval(redshift) 
+       write(UNIT_EXE_FILE,*) ' '
 
-    write(UNIT_EXE_FILE,*) ' '
+       write(UNIT_EXE_FILE,*) 'MAXIMUM RED-SHIFT IN THE CF3 CATALOGUE IS: ', maxval(redshift) 
 
-    write(UNIT_EXE_FILE,*) 'THERE ARE ', number_galaxies_in_CF3, 'GALAXIES IN THE CF3 DATA SET'
+       write(UNIT_EXE_FILE,*) ' '
 
-    counter = 0 
+       write(UNIT_EXE_FILE,*) 'THERE ARE ', number_galaxies_in_CF3, 'GALAXIES IN THE CF3 DATA SET'
 
-    Do index_options=1,number_galaxies_in_CF3
+       counter = 0 
 
-       If ( (redshift(index_options) .ge. redshift_min) .and. (redshift(index_options) .le. redshift_max) ) then
+       Do index_options=1,number_galaxies_in_CF3
 
-          counter = counter + 1
-          
-       Else
+          If ( (redshift(index_options) .ge. redshift_min) .and. (redshift(index_options) .le. redshift_max) ) then
 
-          continue
+             counter = counter + 1
 
-       End If
+          Else
 
-    End Do
-    
-    write(UNIT_EXE_FILE,*) ''
+             continue
 
-    write(UNIT_EXE_FILE,*) 'AND THE CURRENT ANALYSIS USES ', counter, 'GALAXIES, THAT IS, ',&
-         real(counter)/real(number_galaxies_in_CF3)*1.d2,'% OF THE AVAILABLE DATA SET'
+          End If
 
-    write(UNIT_EXE_FILE,*) ''
+       End Do
 
-    write(UNIT_EXE_FILE,*) 'DIVIDING THE CF3 CATALOGUE IN ', number_redshift_bins,' RED-SHIFT BINS'
+       write(UNIT_EXE_FILE,*) ''
 
-    write(UNIT_EXE_FILE,*) ' '
+       write(UNIT_EXE_FILE,*) 'AND THE CURRENT ANALYSIS USES ', counter, 'GALAXIES, THAT IS, ',&
+            real(counter)/real(number_galaxies_in_CF3)*1.d2,'% OF THE AVAILABLE DATA SET'
 
-    write(UNIT_EXE_FILE,*) 'STARTING FROM RED-SHIFT ', redshift_min, 'UP TO RED-SHIFT ', redshift_max
+       write(UNIT_EXE_FILE,*) ''
 
-    write(UNIT_EXE_FILE,*) ' '
+       write(UNIT_EXE_FILE,*) 'DIVIDING THE CF3 CATALOGUE IN ', number_redshift_bins,' RED-SHIFT BINS'
 
-    write(UNIT_EXE_FILE,*) 'N_side = ', nsmax, ' IN THE CURRENT ANALYSIS; THIS CORRESPONDS TO A NUMBER '
-    write(UNIT_EXE_FILE,*) 'OF PIXELS IN THE NUMBER COUNTS MAPS EQUAL TO ', npixC
+       write(UNIT_EXE_FILE,*) ' '
 
-    write(UNIT_EXE_FILE,*) ' '
+       write(UNIT_EXE_FILE,*) 'STARTING FROM RED-SHIFT ', redshift_min, 'UP TO RED-SHIFT ', redshift_max
+
+       write(UNIT_EXE_FILE,*) ' '
+
+       write(UNIT_EXE_FILE,*) 'N_side = ', nsmax, ' IN THE CURRENT ANALYSIS; THIS CORRESPONDS TO A NUMBER '
+       write(UNIT_EXE_FILE,*) 'OF PIXELS IN THE NUMBER COUNTS MAPS EQUAL TO ', npixC
+
+       write(UNIT_EXE_FILE,*) ' '
+
+    End If
 
 !###########################
 ! TESTING CODE (IF REQUIRED)
@@ -170,41 +174,45 @@ Program h0cf3
 ! ANALYSIS STARTS 
 !################
 
-    If (do_galaxy_distribution_plots) then
+    If (do_CF3_analysis) then
 
-       write(UNIT_EXE_FILE,*) 'FIGURES ANGULAR GALAXY DISTRIBUTION BEING CREATED'
+       If (do_galaxy_distribution_plots) then
 
-       Do index_options=1,3
+          write(UNIT_EXE_FILE,*) 'FIGURES ANGULAR GALAXY DISTRIBUTION BEING CREATED'
 
-          call write_python_script_angular_distribution_galaxies(index_options)
+          Do index_options=1,3
 
-       End Do
+             call write_python_script_angular_distribution_galaxies(index_options)
 
-       call write_mpi_file('ang_dist_gal_whole_CF3_dataset',1)
+          End Do
 
-       call write_mpi_file('ang_dist_gal_redshift_bins_CF3_dataset',2)
+          call write_mpi_file('ang_dist_gal_whole_CF3_dataset',1)
 
-       call write_mpi_file('ang_dist_gal_redshift_bins_cumulative_CF3_dataset',3)
+          call write_mpi_file('ang_dist_gal_redshift_bins_CF3_dataset',2)
 
-       write(UNIT_EXE_FILE,*) ' '
+          call write_mpi_file('ang_dist_gal_redshift_bins_cumulative_CF3_dataset',3)
 
-       call system('cd scripts; sbatch ang_dist_gal_whole_CF3_dataset.mpi')
+          write(UNIT_EXE_FILE,*) ' '
 
-       write(UNIT_EXE_FILE,*) ' '
+          call system('cd scripts; sbatch ang_dist_gal_whole_CF3_dataset.mpi')
 
-       call system('cd scripts; sbatch ang_dist_gal_redshift_bins_CF3_dataset.mpi')
+          write(UNIT_EXE_FILE,*) ' '
 
-       write(UNIT_EXE_FILE,*) ' '
+          call system('cd scripts; sbatch ang_dist_gal_redshift_bins_CF3_dataset.mpi')
 
-       call system('cd scripts; sbatch ang_dist_gal_redshift_bins_cumulative_CF3_dataset.mpi')
+          write(UNIT_EXE_FILE,*) ' '
 
-       write(UNIT_EXE_FILE,*) ' '
+          call system('cd scripts; sbatch ang_dist_gal_redshift_bins_cumulative_CF3_dataset.mpi')
 
-    Else
+          write(UNIT_EXE_FILE,*) ' '
 
-       write(UNIT_EXE_FILE,*) 'NOT DOING ANGULAR GALAXY DISTRIBUTION FIGURES'
+       Else
 
-       write(UNIT_EXE_FILE,*) ' '
+          write(UNIT_EXE_FILE,*) 'NOT DOING ANGULAR GALAXY DISTRIBUTION FIGURES'
+
+          write(UNIT_EXE_FILE,*) ' '
+
+       End If
 
     End If
 
@@ -256,15 +264,19 @@ Program h0cf3
 
     If (do_jackknife_analysis) then
 
-       write(UNIT_EXE_FILE,*) 'AND DOING CORRESPONDING JACKKNIFE ANALYSIS'
+       If (do_CF3_analysis) then
 
-       write(UNIT_EXE_FILE,*) ' '
+          write(UNIT_EXE_FILE,*) 'AND DOING CORRESPONDING JACKKNIFE ANALYSIS'
 
-       open(UNIT_CL_FILE,file=PATH_TO_CONFIDENCE_LIMITS_OUTPUT)
+          write(UNIT_EXE_FILE,*) ' '
 
-       write(UNIT_CL_FILE,*) '# MEAN RED-SHIFT    AMPLITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95'//trim('    ')//&
-            '    LATITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95    LONGITUDE    MEAN    LEFT68'//trim('    ')//&
-            '    RIGHT68    LEFT95    RIGHT95    NOISE_AMPLITUDE    NOISE_LATITUDE    NOISE_LONGITUDE'
+          open(UNIT_CL_FILE,file=PATH_TO_CONFIDENCE_LIMITS_OUTPUT)
+
+          write(UNIT_CL_FILE,*) '# MEAN RED-SHIFT    AMPLITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95'//trim('    ')//&
+               '    LATITUDE    MEAN    LEFT68    RIGHT68    LEFT95    RIGHT95    LONGITUDE    MEAN    LEFT68'//trim('    ')//&
+               '    RIGHT68    LEFT95    RIGHT95    NOISE_AMPLITUDE    NOISE_LATITUDE    NOISE_LONGITUDE'
+
+       End If
 
        If (do_JLA_analysis) then
 
@@ -287,40 +299,44 @@ Program h0cf3
     !!$omp Parallel Do
     Do index_options=1,number_redshift_bins
 
-       call compute_number_counts_map(redshift_min,redshift_min+index_options*redshift_step,.false.,&
-            i,current_dipole_amplitude,current_dipole_latitude,current_dipole_longitude,&
-            noise_dipole_amplitude, noise_dipole_latitude, noise_dipole_longitude)
+       If (do_CF3_analysis) then
 
-       write(UNIT_EXE_FILE,*) '********** RED-SHIFT BIN ', index_options, '**********'
-
-       write(UNIT_EXE_FILE,*) 'AMPLITUDE DIPOLE ZMIN ',redshift_min,' ZMAX ',&
-            redshift_min+index_options*redshift_step,' IS ', current_dipole_amplitude
-
-       write(UNIT_EXE_FILE,*) 'DIPOLE LATITUDE IS ', current_dipole_latitude
-
-       write(UNIT_EXE_FILE,*) 'DIPOLE LONGITUDE IS ', current_dipole_longitude
-
-       write(UNIT_EXE_FILE,*) ' '
-
-       If (do_jackknife_analysis) then
-
-          call jackknife_analysis(redshift_min,redshift_min+index_options*redshift_step,current_dipole_amplitude,&
-               current_dipole_latitude,current_dipole_longitude,&
+          call compute_number_counts_map(redshift_min,redshift_min+index_options*redshift_step,.false.,&
+               i,current_dipole_amplitude,current_dipole_latitude,current_dipole_longitude,&
                noise_dipole_amplitude, noise_dipole_latitude, noise_dipole_longitude)
 
-          write(UNIT_EXE_FILE,*) 'JACKKNIFE ANALYSIS IN RED-SHIFT BIN ZMIN ',redshift_min,' ZMAX ',&
-               redshift_min+index_options*redshift_step,' ENDED '
+          write(UNIT_EXE_FILE,*) '********** RED-SHIFT BIN ', index_options, '**********'
 
+          write(UNIT_EXE_FILE,*) 'AMPLITUDE DIPOLE ZMIN ',redshift_min,' ZMAX ',&
+               redshift_min+index_options*redshift_step,' IS ', current_dipole_amplitude
+
+          write(UNIT_EXE_FILE,*) 'DIPOLE LATITUDE IS ', current_dipole_latitude
+
+          write(UNIT_EXE_FILE,*) 'DIPOLE LONGITUDE IS ', current_dipole_longitude
 
           write(UNIT_EXE_FILE,*) ' '
 
-       Else
+          If (do_jackknife_analysis) then
 
-          continue
+             call jackknife_analysis(redshift_min,redshift_min+index_options*redshift_step,current_dipole_amplitude,&
+                  current_dipole_latitude,current_dipole_longitude,&
+                  noise_dipole_amplitude, noise_dipole_latitude, noise_dipole_longitude)
+
+             write(UNIT_EXE_FILE,*) 'JACKKNIFE ANALYSIS IN RED-SHIFT BIN ZMIN ',redshift_min,' ZMAX ',&
+                  redshift_min+index_options*redshift_step,' ENDED '
+
+
+             write(UNIT_EXE_FILE,*) ' '
+
+          Else
+
+             continue
+
+          End If
+
+          write(UNIT_EXE_FILE,*) '******************************************************************'
 
        End If
-
-       write(UNIT_EXE_FILE,*) '******************************************************************'
 
        If (do_JLA_analysis) then
 
@@ -363,9 +379,15 @@ Program h0cf3
     End Do
     !!$omp End Parallel Do 
 
-    call system('python scripts/plot_results_jackknife_analysis.py')
+    If (do_CF3_analysis) then
 
-    If (do_jackknife_analysis) then
+       call system('python scripts/plot_results_jackknife_analysis.py')
+
+       close(UNIT_CL_FILE)
+
+    End If
+
+    If (do_JLA_analysis) then
 
        call system('python scripts/plot_results_jackknife_analysis_jla.py')
 
@@ -375,8 +397,6 @@ Program h0cf3
 
     write(UNIT_EXE_FILE,*) 'THE ANALYSIS WAS PERFORMED IN ',(omp_get_wtime()-wtime)/3.6d3,' HOURS'
 
-    close(UNIT_CL_FILE)
-    
     close(UNIT_EXE_FILE)
 
 End Program h0cf3
