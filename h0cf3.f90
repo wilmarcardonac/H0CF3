@@ -99,13 +99,31 @@ Program h0cf3
 
        write(UNIT_EXE_FILE,*) ' '
 
-       write(UNIT_EXE_FILE,*) 'MINIMUM RED-SHIFT IN THE CF3 CATALOGUE IS: ', minval(redshift)
+       If (do_CF3_corrected_analysis) then 
 
-       write(UNIT_EXE_FILE,*) ' '
+          write(UNIT_EXE_FILE,*) 'DOING ANALYSIS WITH CORRECTED RED-SHIFT IN CF3 CATALOGUE '
 
-       write(UNIT_EXE_FILE,*) 'MAXIMUM RED-SHIFT IN THE CF3 CATALOGUE IS: ', maxval(redshift) 
+          write(UNIT_EXE_FILE,*) ' '
 
-       write(UNIT_EXE_FILE,*) ' '
+          write(UNIT_EXE_FILE,*) 'MINIMUM CORRECTED RED-SHIFT IN THE CF3 CATALOGUE IS: ', minval(redshift_corrected)
+
+          write(UNIT_EXE_FILE,*) ' '
+
+          write(UNIT_EXE_FILE,*) 'MAXIMUM CORRECTED RED-SHIFT IN THE CF3 CATALOGUE IS: ', maxval(redshift_corrected) 
+
+          write(UNIT_EXE_FILE,*) ' '
+
+       Else
+
+          write(UNIT_EXE_FILE,*) 'MINIMUM RED-SHIFT IN THE CF3 CATALOGUE IS: ', minval(redshift)
+
+          write(UNIT_EXE_FILE,*) ' '
+
+          write(UNIT_EXE_FILE,*) 'MAXIMUM RED-SHIFT IN THE CF3 CATALOGUE IS: ', maxval(redshift) 
+
+          write(UNIT_EXE_FILE,*) ' '
+
+       End If
 
        write(UNIT_EXE_FILE,*) 'THERE ARE ', number_galaxies_in_CF3, 'GALAXIES IN THE CF3 DATA SET'
 
@@ -168,7 +186,6 @@ Program h0cf3
        continue
 
     End If
-
 
 !################
 ! ANALYSIS STARTS 
@@ -301,36 +318,75 @@ Program h0cf3
 
        If (do_CF3_analysis) then
 
-          call compute_number_counts_map(redshift_min,redshift_min+index_options*redshift_step,.false.,&
-               i,current_dipole_amplitude,current_dipole_latitude,current_dipole_longitude,&
-               noise_dipole_amplitude, noise_dipole_latitude, noise_dipole_longitude)
+          If (do_CF3_corrected_analysis) then 
 
-          write(UNIT_EXE_FILE,*) '********** RED-SHIFT BIN ', index_options, '**********'
-
-          write(UNIT_EXE_FILE,*) 'AMPLITUDE DIPOLE ZMIN ',redshift_min,' ZMAX ',&
-               redshift_min+index_options*redshift_step,' IS ', current_dipole_amplitude
-
-          write(UNIT_EXE_FILE,*) 'DIPOLE LATITUDE IS ', current_dipole_latitude
-
-          write(UNIT_EXE_FILE,*) 'DIPOLE LONGITUDE IS ', current_dipole_longitude
-
-          write(UNIT_EXE_FILE,*) ' '
-
-          If (do_jackknife_analysis) then
-
-             call jackknife_analysis(redshift_min,redshift_min+index_options*redshift_step,current_dipole_amplitude,&
-                  current_dipole_latitude,current_dipole_longitude,&
+             call compute_number_counts_map_corrected(redshift_min,redshift_min+index_options*redshift_step,.false.,&
+                  i,current_dipole_amplitude,current_dipole_latitude,current_dipole_longitude,&
                   noise_dipole_amplitude, noise_dipole_latitude, noise_dipole_longitude)
 
-             write(UNIT_EXE_FILE,*) 'JACKKNIFE ANALYSIS IN RED-SHIFT BIN ZMIN ',redshift_min,' ZMAX ',&
-                  redshift_min+index_options*redshift_step,' ENDED '
+             write(UNIT_EXE_FILE,*) '********** RED-SHIFT BIN ', index_options, '**********'
 
+             write(UNIT_EXE_FILE,*) 'AMPLITUDE DIPOLE ZMIN ',redshift_min,' ZMAX ',&
+                  redshift_min+index_options*redshift_step,' IS ', current_dipole_amplitude
+
+             write(UNIT_EXE_FILE,*) 'DIPOLE LATITUDE IS ', current_dipole_latitude
+
+             write(UNIT_EXE_FILE,*) 'DIPOLE LONGITUDE IS ', current_dipole_longitude
 
              write(UNIT_EXE_FILE,*) ' '
 
+             If (do_jackknife_analysis) then
+
+                call jackknife_analysis_corrected(redshift_min,redshift_min+index_options*redshift_step,current_dipole_amplitude,&
+                     current_dipole_latitude,current_dipole_longitude,&
+                     noise_dipole_amplitude, noise_dipole_latitude, noise_dipole_longitude)
+
+                write(UNIT_EXE_FILE,*) 'JACKKNIFE ANALYSIS IN RED-SHIFT BIN ZMIN ',redshift_min,' ZMAX ',&
+                     redshift_min+index_options*redshift_step,' ENDED '
+
+
+                write(UNIT_EXE_FILE,*) ' '
+
+             Else
+
+                continue
+
+             End If
+
           Else
 
-             continue
+             call compute_number_counts_map(redshift_min,redshift_min+index_options*redshift_step,.false.,&
+                  i,current_dipole_amplitude,current_dipole_latitude,current_dipole_longitude,&
+                  noise_dipole_amplitude, noise_dipole_latitude, noise_dipole_longitude)
+
+             write(UNIT_EXE_FILE,*) '********** RED-SHIFT BIN ', index_options, '**********'
+
+             write(UNIT_EXE_FILE,*) 'AMPLITUDE DIPOLE ZMIN ',redshift_min,' ZMAX ',&
+                  redshift_min+index_options*redshift_step,' IS ', current_dipole_amplitude
+
+             write(UNIT_EXE_FILE,*) 'DIPOLE LATITUDE IS ', current_dipole_latitude
+
+             write(UNIT_EXE_FILE,*) 'DIPOLE LONGITUDE IS ', current_dipole_longitude
+
+             write(UNIT_EXE_FILE,*) ' '
+
+             If (do_jackknife_analysis) then
+
+                call jackknife_analysis(redshift_min,redshift_min+index_options*redshift_step,current_dipole_amplitude,&
+                     current_dipole_latitude,current_dipole_longitude,&
+                     noise_dipole_amplitude, noise_dipole_latitude, noise_dipole_longitude)
+
+                write(UNIT_EXE_FILE,*) 'JACKKNIFE ANALYSIS IN RED-SHIFT BIN ZMIN ',redshift_min,' ZMAX ',&
+                     redshift_min+index_options*redshift_step,' ENDED '
+
+
+                write(UNIT_EXE_FILE,*) ' '
+
+             Else
+
+                continue
+
+             End If
 
           End If
 

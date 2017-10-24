@@ -12,12 +12,12 @@ Module fiducial
   
   Real*8,parameter    :: miss = -1.63750d-13
   Real*8, parameter :: redshift_min = 1.d-2 ! SET LOWEST REDSHIFT FOR ANALYSIS 
-  Real*8, parameter :: redshift_max = 1.30d0 !1.2d-1 !5.d-2 ! SET HIGHEST REDSHIFT FOR ANALYSIS. CURRENT CHOICES ARE: 0.05, 0.12, 1.30 
+  Real*8, parameter :: redshift_max = 5.d-2 !1.30d0 !1.3d-1 !5.d-2 ! SET HIGHEST REDSHIFT FOR ANALYSIS. CURRENT CHOICES ARE: 0.05, 0.12, 1.30 
   Real*8, parameter :: redshift_step = 5.d-3 ! SET STEP IN REDSHIFT FOR ANALYSIS  
   Real*8, parameter :: redshift_min_jla = 1.d-2 ! SET LOWEST REDSHIFT FOR ANALYSIS 
-  Real*8, parameter :: redshift_max_jla = 1.30d0 !1.2d-1!5.d-2 ! SET HIGHEST REDSHIFT FOR ANALYSIS. CURRENT CHOICES ARE: 0.05, 0.12, 1.30 
+  Real*8, parameter :: redshift_max_jla = 5.d-2 !1.30d0 !1.3d-1!5.d-2 ! SET HIGHEST REDSHIFT FOR ANALYSIS. CURRENT CHOICES ARE: 0.05, 0.12, 1.30 
 
-  Integer(kind=I4B),parameter :: nsmax = 2  ! Nside FOR NUMBER COUNTS MAP: 2**M=1,2,4,8
+  Integer(kind=I4B),parameter :: nsmax = 1  ! Nside FOR NUMBER COUNTS MAP: 2**M=1,2,4,8
   Integer*4,parameter :: nlmax = 2*nsmax    ! HIGHEST MULTIPOLE
   Integer*4,parameter :: UNIT_EXE_FILE = 90           ! UNIT NUMBER FOR EXECUTION INFORMATION FILE
   Integer*4,parameter :: UNIT_JACKKNIFE_FILE = 91     ! UNIT NUMBER FOR JACKKNIFE ANALYSIS FILE 
@@ -49,8 +49,9 @@ Module fiducial
   Logical,parameter   :: do_supernovae_distribution_plots = .false. ! DO PLOTS OF ANGULAR DISTRIBUTION OF SUPERNOVAE IF SET IT TRUE
   Logical,parameter   :: do_jackknife_analysis = .true.        ! DO JACKKNIFE ANALYSIS IF SET IT TRUE
   Logical,parameter   :: do_tests = .false.   ! TEST THE CODE IF SET IT TRUE 
-  Logical,parameter   :: do_JLA_analysis = .true. ! ANALYSIS JLA DATA SET IF SET IT TRUE
-  Logical,parameter   :: do_CF3_analysis = .false. ! ANALYSIS JLA DATA SET IF SET IT TRUE
+  Logical,parameter   :: do_JLA_analysis = .false. ! ANALYSIS JLA DATA SET IF SET IT TRUE
+  Logical,parameter   :: do_CF3_analysis = .true. ! ANALYSIS CF3 DATA SET IF SET IT TRUE
+  Logical,parameter   :: do_CF3_corrected_analysis = .true. ! ANALYSIS CF3 WITH CORRECTED RED-SHIFT DATA SET IF SET IT TRUE
 
   Character(len=*),parameter :: beam_file = " '' "    ! PATH TO BEAM FILE
   Character(len=*),parameter :: almsfile = " '' "     ! PATH ALMS FILE
